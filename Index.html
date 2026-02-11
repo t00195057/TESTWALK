@@ -10,8 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 
     <style>
-
-
         :root{
             --primary:#1f7a6d;
             --secondary:#2c3e50;
@@ -21,482 +19,239 @@
         }
         *{box-sizing:border-box}
         body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;color:var(--text-dark);background:var(--bg-light)}
-        .thTop{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:10px;
-        }
+
+        .thTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
 
         .sortHandle{
-            font-size:11px;
-            opacity:.8;
-            padding:4px 6px;
-            border-radius:8px;
-            border:1px solid #e3ece9;
-            background:#fff;
-            cursor:pointer;
-            user-select:none;
+            font-size:11px;opacity:.8;padding:4px 6px;border-radius:8px;
+            border:1px solid #e3ece9;background:#fff;cursor:pointer;user-select:none;
         }
+
         #clearFiltersBtn{
-            background:#fff;
-            color: var(--secondary);
-            border:1px solid var(--border);
-            padding:8px 12px;
-            border-radius:12px;
-            cursor:pointer;
-            font-weight:900;
-            white-space:nowrap;
+            background:#fff;color:var(--secondary);border:1px solid var(--border);
+            padding:8px 12px;border-radius:12px;cursor:pointer;font-weight:900;white-space:nowrap;
         }
         #clearFiltersBtn:hover{ background: var(--bg-light); }
 
         #mobilePanelHandle{
-            position:sticky;
-            top:0;
-            z-index:5;
-            display:none;
-            width:100%;
-            margin:0 0 10px 0;
-            padding:10px 12px;
-            border-radius:12px;
-            border:1px solid var(--border);
-            background:#fff;
-            color:var(--secondary);
-            font-weight:900;
-            cursor:pointer;
+            position:sticky;top:0;z-index:5;display:none;width:100%;
+            margin:0 0 10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+            background:#fff;color:var(--secondary);font-weight:900;cursor:pointer;
             box-shadow:0 2px 10px rgba(0,0,0,0.06);
         }
 
-        /* Mobile only: show table handle, hide full-map button */
-
-
         .thSearch{
-            display:none;              /* hidden until header clicked */
-            margin-top:6px;
-            width:100%;
-            height:28px;
-            border:1px solid var(--border);
-            border-radius:8px;
-            padding:0 8px;
-            font-size:12px;
-            font-weight:600;
+            display:none;margin-top:6px;width:100%;height:28px;border:1px solid var(--border);
+            border-radius:8px;padding:0 8px;font-size:12px;font-weight:600;
         }
         th.search-open .thSearch{ display:block; }
 
-        /* Subtle professional accents */
+        /* Top filters bar (desktop default) */
         #filters{
             background: linear-gradient(180deg, #ffffff, #fbfcfd);
-            display:flex;
-            align-items:center;
-            gap:14px;
-            border-bottom:1px solid var(--border);
+            display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);
         }
-        #filters label{
-            color: #1f3342;
-            letter-spacing: .2px;
-        }
+        #filters label{ color:#1f3342;letter-spacing:.2px;font-size:13px;font-weight:600;white-space:nowrap; }
 
-        /* compact groups */
         .filterGroup{
-            display:flex;
-            flex-direction:column;
-            gap:6px;
-            padding:6px 10px;
-            border:1px solid #eef2f5;
-            background:#ffffff;
-            border-radius:12px;
-            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            display:flex;flex-direction:column;gap:6px;padding:6px 10px;border:1px solid #eef2f5;
+            background:#ffffff;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,0.03);
         }
 
-        .rangeRow{
-            display:flex;
-            align-items:center;
-            gap:8px;
-        }
-
-        .slider{
-            width:160px;
-        }
+        .rangeRow{display:flex;align-items:center;gap:8px}
+        .slider{width:160px}
 
         .miniInput{
-            width:54px;
-            height:28px;
-            border:1px solid var(--border);
-            border-radius:8px;
-            padding:0 8px;
-            font-weight:700;
-            font-size:12px;
-            color: var(--secondary);
-            background:#fff;
+            width:54px;height:28px;border:1px solid var(--border);border-radius:8px;padding:0 8px;
+            font-weight:700;font-size:12px;color:var(--secondary);background:#fff;
         }
         .miniInput:focus{
-            outline:none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(31,122,109,0.15);
+            outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(31,122,109,0.15);
         }
 
-        /* noUiSlider nice look */
-        .noUi-target{
-            border: none;
-            box-shadow: none;
-            background:#e9eef3;
-            border-radius:999px;
-            height:6px;
-        }
-        .noUi-connect{
-            background: var(--primary);
-        }
+        /* noUiSlider */
+        .noUi-target{border:none;box-shadow:none;background:#e9eef3;border-radius:999px;height:6px}
+        .noUi-connect{background:var(--primary)}
         .noUi-handle{
-            border:none;
-            box-shadow: 0 6px 14px rgba(0,0,0,.12);
-            border-radius:999px;
-            width:18px !important;
-            height:18px !important;
-            right:-9px !important;
-            top:-6px !important;
+            border:none;box-shadow:0 6px 14px rgba(0,0,0,.12);border-radius:999px;
+            width:18px !important;height:18px !important;right:-9px !important;top:-6px !important;
         }
-        .noUi-handle:before, .noUi-handle:after{ display:none; }
+        .noUi-handle:before,.noUi-handle:after{display:none}
 
-        /* Table header color */
-        #walkTable th{
-            background: #f6faf9;
-            border-bottom: 1px solid #e7eeec;
-        }
-        /* Mobile filters toggle button */
+        /* Table header tint */
+        #walkTable th{background:#f6faf9;border-bottom:1px solid #e7eeec}
+
+        /* Mobile filters toggle button (shown only on mobile) */
         #mobileFiltersToggle{
-            display:none;              /* only on mobile */
-            background:#fff;
-            border:1px solid var(--border);
-            border-radius:12px;
-            padding:10px 12px;
-            font-weight:800;
-            color:var(--secondary);
-            cursor:pointer;
+            display:none;background:#fff;border:1px solid var(--border);border-radius:12px;
+            padding:10px 12px;font-weight:800;color:var(--secondary);cursor:pointer;
             box-shadow:0 2px 10px rgba(0,0,0,0.06);
         }
 
+        /* Filters inner row (desktop default) */
         #filtersInner{
             -webkit-overflow-scrolling: touch;
-            flex:1;
-            display:flex;
-            align-items:center;
-            gap:18px;
-            flex-wrap:nowrap;
-            overflow-x:auto;
-            overflow-y:visible;
-        }
-        /* MOBILE: filters become a centered modal */
-        /* MOBILE: filters become a TOP sheet (not centered) */
-
-
-        /* very small screens: 1 column in modal */
-        @media (max-width: 520px){
-            .filterGroup{ width:100%; }
-            .dropdown{ width:100%; }
+            flex:1;display:flex;align-items:center;gap:18px;flex-wrap:nowrap;
+            overflow-x:auto;overflow-y:visible;
         }
 
-
-
-
-
+        /* Logo */
         #logoPlaceholder{
-            width:120px;
-            height:46px;
-            border-radius:12px;
-            background:#e9eef3;
-            color:#2c3e50;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:900;
-            letter-spacing:1px;
-            flex: 0 0 auto;
-                   }
-
-        /* Slightly push slicers right (optional extra nudge) */
-        /* TOP BAR */
-        /* TOP BAR (desktop only) */
-        @media (max-width: 768px){
-
-            /* top bar layout: logo left, button right */
-            #filters{
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:12px;
-            }
-
-            /* button stays on the right */
-            #mobileFiltersToggle{
-                margin-left:auto;
-            }
-
-            /* MOBILE SHEET: make filters stack in rows */
-            #filtersInner{
-                display:none;          /* stays hidden until open */
-                flex-direction:column; /* << key change */
-                align-items:stretch;
-                gap:12px;
-
-
-            }
-
-            /* make each control full width in the sheet */
-            .filterGroup{ width:100% !important; }
-            .dropdown{ width:100% !important; }
-            #difficultyFilter{ width:100%; height:40px; border-radius:12px; }
-
-            /* nicer spacing for difficulty label on mobile */
-            #filtersInner > label{
-                margin-top:4px;
-                font-weight:800;
-            }
+            width:120px;height:46px;border-radius:12px;background:#e9eef3;color:#2c3e50;
+            display:flex;align-items:center;justify-content:center;font-weight:900;letter-spacing:1px;
+            flex:0 0 auto;
         }
-
-
-
-        #filters label{font-size:13px;font-weight:600;color:var(--secondary);white-space:nowrap}
 
         /* DROPDOWNS */
-
         .dropdown{ position:relative; z-index:11000; }
 
         .dropdown-content{
-            display:none;
-            position:fixed;              /* IMPORTANT */
-            background:#fff;
-            border-radius:8px;
-            border:1px solid var(--border);
-            padding:10px;
-            max-height:240px;
-            overflow-y:auto;
-            box-shadow:0 10px 25px rgba(0,0,0,0.12);
-            z-index:999999;              /* very top */
-            min-width:220px;
+            display:none;position:fixed;background:#fff;border-radius:8px;border:1px solid var(--border);
+            padding:10px;max-height:240px;overflow-y:auto;box-shadow:0 10px 25px rgba(0,0,0,0.12);
+            z-index:999999;min-width:220px;
         }
         .dropdown.open .dropdown-content{display:block}
 
         .dropdown-content label{
             display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer;
-
         }
+
+        .dropdown button{
+            background:#fff;color:var(--secondary);border:1px solid var(--border);
+            padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;white-space:nowrap;
+        }
+        .dd-search-wrap{
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding-bottom: 8px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #eef2f5;
+            z-index: 1;
+        }
+
+        .dd-search{
+            width:100%;
+            height:34px;
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:0 10px;
+            font-weight:700;
+            font-size:13px;
+        }
+        .dd-search:focus{
+            outline:none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(31,122,109,0.15);
+        }
+
 
         /* LAYOUT (desktop) */
         #appWrap{
-            position:relative;
-            width:100%;
-            height:calc(100vh - 70px);
-            display:flex;
-            position:relative; z-index:1;
+            position:relative;width:100%;height:calc(100vh - 70px);
+            display:flex;z-index:1;
         }
-
-        #map{
-            width:70%;
-            height:100%;
-            position:relative; z-index:1;
-        }
+        #map{width:70%;height:100%;position:relative;z-index:1}
         #panel{
-            width:30%;
-            height:100%;
-            padding:20px;
-            background:#fff;
-            border-left:1px solid var(--border);
-            overflow-y:auto;
-            position:relative;
-            transition:width .2s ease;
+            width:30%;height:100%;padding:20px;background:#fff;border-left:1px solid var(--border);
+            overflow-y:auto;position:relative;transition:width .2s ease;
         }
 
-        /* (5) Panel collapse -> full map */
         #appWrap.panel-collapsed #panel{display:none}
         #appWrap.panel-collapsed #map{width:100%}
 
-        /* Toggle button sits ON TOP of MAP so it still exists when panel is hidden */
         #panelToggleBtn{
-            position:absolute;
-            top:12px;
-            right:12px;
-            z-index:60;
-            background:var(--primary);
-            color:#fff;
-            border:none;
-            border-radius:10px;
-            padding:10px 12px;
-            font-weight:800;
-            cursor:pointer;
+            position:absolute;top:12px;right:12px;z-index:60;background:var(--primary);color:#fff;
+            border:none;border-radius:10px;padding:10px 12px;font-weight:800;cursor:pointer;
             box-shadow:0 8px 18px rgba(0,0,0,.18);
         }
         #panelToggleBtn:hover{filter:brightness(.95)}
-        /* Walk action buttons (spruced + centered) */
-        .actionRow{
-            display:flex;
-            gap:12px;
-            justify-content:center;
-            align-items:center;
-            flex-wrap:wrap;
-            margin:12px 0 14px;
-        }
 
+        .actionRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:12px 0 14px}
         .actionBtn{
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            gap:8px;
-            min-width:170px;
-            padding:12px 14px;
-            border-radius:14px;
-            border:1px solid transparent;
-            font-weight:900;
-            cursor:pointer;
-            transition: transform .06s ease, filter .12s ease;
+            display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:170px;
+            padding:12px 14px;border-radius:14px;border:1px solid transparent;font-weight:900;cursor:pointer;
+            transition:transform .06s ease, filter .12s ease;
         }
-
         .actionBtn:active{ transform: translateY(1px); }
+        .actionBtn.primary{background:var(--primary);color:#fff;box-shadow:0 10px 18px rgba(31,122,109,0.22)}
+        .actionBtn.primary:hover{filter:brightness(.96)}
+        .actionBtn.secondary{background:#fff;color:var(--secondary);border-color:#dfe7e5}
+        .actionBtn.secondary:hover{background:#f6faf9}
 
-        .actionBtn.primary{
-            background: var(--primary);
-            color:#fff;
-            box-shadow: 0 10px 18px rgba(31,122,109,0.22);
-        }
-        .actionBtn.primary:hover{ filter:brightness(.96); }
-
-        .actionBtn.secondary{
-            background:#fff;
-            color: var(--secondary);
-            border-color:#dfe7e5;
-        }
-        .actionBtn.secondary:hover{ background:#f6faf9; }
-
-        /* WALK DETAILS */
         #walkDetails h2{margin-top:0;color:var(--primary)}
         #walk-info{background:var(--bg-light);padding:10px;border-radius:8px;font-size:14px;margin-bottom:12px}
-
         iframe{width:100%;height:240px;border-radius:10px;margin-bottom:12px;border:0}
-
-        /* Only buttons you WANT green get this class */
-        .primary-btn {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-        .primary-btn:hover { background: #17665b; }
-
-        /* Dropdown buttons stay white with visible text */
-        .dropdown button{
-            background:#fff;
-            color: var(--secondary);
-            border:1px solid var(--border);
-            padding:7px 12px;
-            border-radius:6px;
-            cursor:pointer;
-            font-size:13px;
-            font-weight:700;
-            white-space:nowrap;
-        }
-
 
         /* TABLE */
         #walkTable{width:100%;border-collapse:collapse;font-size:13px}
         #walkTable th,#walkTable td{padding:8px;border-bottom:1px solid var(--border);vertical-align:middle}
         #walkTable tr{cursor:pointer}
         #walkTable tr:hover{background:var(--bg-light)}
-        #walkTable th{
-            user-select:none;
-            cursor:pointer; /* (9) sortable headers */
-            position:sticky; top:0; background:#fff;
-            z-index:1;
-        }
+        #walkTable th{user-select:none;cursor:pointer;position:sticky;top:0;background:#fff;z-index:1}
         .th-sort-indicator{font-size:11px;opacity:.75;margin-left:6px}
 
         .dir-btn{
-            background:#fff;
-            border:1px solid var(--border);
-            color:var(--secondary);
-            padding:6px 10px;
-            border-radius:8px;
-            font-weight:700;
+            background:#fff;border:1px solid var(--border);color:var(--secondary);
+            padding:6px 10px;border-radius:8px;font-weight:700;
         }
         .dir-btn:hover{background:var(--bg-light)}
         .row-actions{display:flex;gap:8px;justify-content:flex-end}
         .row-actions button{margin:0}
 
-
+        /* Small screens */
         @media (max-width: 520px){
-            .filterGroup{
-                width:100%;               /* 1 column on very small screens */
-            }
+            .filterGroup{ width:100%; }
+            .dropdown{ width:100%; }
         }
+
+        /* =========================
+           MOBILE (single source of truth)
+           ========================= */
         @media (max-width: 768px){
-            #clearFiltersBtn{ width:100%; order:1; }
-            #inclineGroup{ order:2; }
-            /* Top bar always visible */
+
+            /* Top bar layout */
             #filters{
-                position: sticky;
-                top: 0;
-                z-index: 1000000;
-                padding: 10px 12px;
-                height: auto;
-                background: linear-gradient(180deg, #ffffff, #fbfcfd);
+                display:flex;align-items:center;justify-content:space-between;gap:12px;
+                position: sticky;top: 0;z-index: 4000000;
+                padding: 10px 12px;height:auto;background: linear-gradient(180deg, #ffffff, #fbfcfd);
             }
 
-            /* Make sure the Filters button actually shows */
+            /* Show filters button on mobile */
             #mobileFiltersToggle{
-                display: inline-flex !important;
-                align-items: center;
-                gap: 8px;
-                pointer-events: auto;
+                display:inline-flex !important;
+                align-items:center;gap:8px;
+                margin-left:auto;
+                pointer-events:auto;
             }
 
-            /* Full-width stacked layout like before */
-            #appWrap{
-                flex-direction: column;
-                height: calc(100vh - 60px); /* approx filters bar height */
+            /* Base: hide inner until modal open */
+            #filtersInner{
+                display:none;
+                flex-direction:column;
+                align-items:stretch;
+                gap:12px;
             }
 
-            #map{
-                width: 100%;
-                height: 60vh;
-            }
-
-            #panel{
-                width: 100%;
-                height: 40vh;
-                border-left: none;
-                border-top: 1px solid var(--border);
-                padding: 14px;
-                overflow-y: auto;
-            }
-
-            /* Show the table handle, hide the full-map button */
-            #mobilePanelHandle{ display: block; }
-            #panelToggleBtn{ display: none; }
-
-            /* Collapsing table gives map more room */
-            #appWrap.mobile-panel-collapsed #walkTableContainer{ display:none; }
-            #appWrap.mobile-panel-collapsed #panel{ height:auto; padding:10px 14px; }
-            #appWrap.mobile-panel-collapsed #map{ height: calc(100vh - 60px - 62px); }
-
-            /* Backdrop below the sheet */
+            /* Modal backdrop */
             #filtersBackdrop{
                 display:none;
                 position: fixed;
                 inset: 0;
                 background: rgba(0,0,0,0.35);
-                z-index: 1000001;           /* below filtersInner */
+                z-index: 3999998;
                 pointer-events: auto;
             }
 
-            /* The sheet ABOVE backdrop and clickable */
+            /* Modal sheet */
             #filtersInner{
-                display:none;
                 position: fixed;
-                left: 50%;
+                left: 4vw;
+                right: 4vw;
                 top: 60px;
-                transform: translateX(-50%);
-                z-index: 1000002;           /* above backdrop */
+                transform: none !important;
+                margin: 0 auto;
+                max-width: 520px;
                 width: min(92vw, 520px);
                 max-height: 70vh;
                 overflow: auto;
@@ -505,26 +260,83 @@
                 border-radius: 16px;
                 padding: 14px;
                 box-shadow: 0 18px 60px rgba(0,0,0,0.25);
-
-                /* ensure taps work */
+                z-index: 3999999;
                 pointer-events: auto;
+                touch-action: manipulation;
             }
 
             #filters.mobile-open #filtersInner{ display:flex; }
             #filters.mobile-open + #filtersBackdrop{ display:block; }
 
-            /* Make sure everything inside can receive taps */
-            #filtersInner *{ pointer-events: auto; }
+            /* Make each control full width in the sheet */
+            .filterGroup{ width:100% !important; }
+            .dropdown{ position:relative; width:100% !important; z-index: 1; }
+            .dropdown button{ width:100%; padding:8px 10px; font-size:12px; border-radius:12px; }
+            .dropdown-content{
+                position: fixed !important;
+                z-index: 6000000 !important; /* higher than #filtersInner */
+                max-height: 55vh;
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            /* Make the currently open dropdown always sit above everything else */
+            .dropdown.open{ z-index: 9000000; }
 
-            /* keep your sizing inside sheet */
-            .filterGroup{ width:calc(50% - 10px); padding:8px; border-radius:12px; }
+            /* The menu itself goes above the sheet contents */
+            .dropdown.open .dropdown-content{
+                z-index: 9000001 !important;
+            }
+
             .slider{ width:100%; }
             .miniInput{ width:48px; height:26px; font-size:12px; padding:0 6px; }
-            .dropdown{ width:calc(50% - 10px); }
-            .dropdown button{ width:100%; padding:8px 10px; font-size:12px; border-radius:12px; }
-        }
 
+            /* App layout mobile */
+            #appWrap{flex-direction: column;height: calc(100vh - 60px);}
+            #map{width:100%;height:60vh;}
+
+            /* Bottom sheet / panel */
+            #panel{
+                width:100%;
+                height:40vh;
+                max-height:75vh;
+                min-height:18vh;
+                border-left:none;
+                border-top:1px solid var(--border);
+                padding: 10px 14px 14px;
+                overflow:hidden;
+                position:relative;
+                touch-action:none;
+            }
+
+            #walkTableContainer, #walkDetails{
+                height: calc(100% - 52px);
+                overflow:auto;
+            }
+
+            #mobilePanelHandle{
+                display:block;
+                position:sticky;
+                top:0;
+                z-index:5;
+                margin:0 0 8px 0;
+                padding:10px 12px;
+            }
+
+            #mobilePanelHandle::before{
+                content:"";
+                display:block;
+                width:44px;height:5px;border-radius:999px;background:#dfe7e5;margin:0 auto 8px;
+            }
+
+            #panelToggleBtn{ display:none; }
+
+            /* Collapsing table gives map more room */
+            #appWrap.mobile-panel-collapsed #walkTableContainer{ display:none; }
+            #appWrap.mobile-panel-collapsed #panel{ height:auto; padding:10px 14px; }
+            #appWrap.mobile-panel-collapsed #map{ height: calc(100vh - 60px - 62px); }
+        }
     </style>
+
 </head>
 
 <body>
@@ -538,7 +350,7 @@
 
 
         <!-- INCLINE GROUP -->
-        <div class="filterGroup">
+        <div class="filterGroup" id="inclineGroup">
             <label>Incline (m)</label>
             <div class="rangeRow">
                 <input id="inclineMinInput" class="miniInput" inputmode="numeric" value="0">
@@ -548,7 +360,7 @@
         </div>
 
         <!-- LENGTH GROUP -->
-        <div class="filterGroup" id="inclineGroup">
+        <div class="filterGroup" id="lengthGroup">
             <label>Length (km)</label>
             <div class="rangeRow">
                 <input id="lengthMinInput" class="miniInput" inputmode="numeric" value="0">
@@ -558,18 +370,24 @@
         </div>
 
 
-        <label>Difficulty</label>
-        <select id="difficultyFilter">
-            <option value="all">All</option>
-            <option value="EASY">Easy</option>
-            <option value="MODERATE">Moderate</option>
-            <option value="HARD">Hard</option>
-        </select>
+        <div class="dropdown" id="difficultyDropdown">
+            <button id="difficultyBtn" type="button" onclick="toggleDropdown('difficultyDropdown')">Difficulty</button>
+            <div class="dropdown-content">
+                <label><input type="radio" name="difficultyRadio" value="all" checked> All</label>
+                <label><input type="radio" name="difficultyRadio" value="EASY"> Easy</label>
+                <label><input type="radio" name="difficultyRadio" value="MODERATE"> Moderate</label>
+                <label><input type="radio" name="difficultyRadio" value="HARD"> Hard</label>
+            </div>
+        </div>
 
 
-    <div class="dropdown" id="countyDropdown">
+
+        <div class="dropdown" id="countyDropdown">
         <button id="countyBtn" type="button" onclick="toggleDropdown('countyDropdown')">Counties</button>
         <div class="dropdown-content">
+            <div class="dd-search-wrap">
+                <input id="countySearch" class="dd-search" type="text" placeholder="Search counties…">
+            </div>
             <label><input type="checkbox" value="Antrim"> Antrim</label>
             <label><input type="checkbox" value="Armagh"> Armagh</label>
             <label><input type="checkbox" value="Carlow"> Carlow</label>
@@ -772,7 +590,9 @@
         }
     }
 
-
+    function getIrelandView(){
+        return window.matchMedia("(max-width: 768px)").matches ? IRELAND_VIEW_MOBILE : IRELAND_VIEW_DESKTOP;
+    }
     // Keep dropdown label text always visible + show counts
     function updateDropdownButtonLabels() {
         const countyCount = document.querySelectorAll('#countyDropdown input:checked').length;
@@ -897,6 +717,10 @@
         map.on('idle', () => updateWalkTable());
         updateDropdownButtonLabels();
         applyAllFilters(); // initial
+        // set initial view based on device
+        const v = getIrelandView();
+        map.jumpTo({ center: v.center, zoom: v.zoom });
+
     });
     const inclineMinInput = document.getElementById('inclineMinInput');
     const inclineMaxInput = document.getElementById('inclineMaxInput');
@@ -906,7 +730,7 @@
     /* SLIDERS */
     const inclineSlider = document.getElementById('inclineSlider');
     const lengthSlider = document.getElementById('lengthSlider');
-    const difficultyFilter = document.getElementById('difficultyFilter');
+
 
     noUiSlider.create(inclineSlider, { start:[0,1500], connect:true, range:{min:0,max:1500}, step:50 });
     noUiSlider.create(lengthSlider,  { start:[0,30],   connect:true, range:{min:0,max:30},   step:1  });
@@ -979,7 +803,7 @@
         return {
             minIncline, maxIncline,
             minLength, maxLength,
-            Difficulty: difficultyFilter.value,
+            Difficulty: document.querySelector('input[name="difficultyRadio"]:checked')?.value || "all",
             counties,
             poiTypes
         };
@@ -1018,7 +842,14 @@
         // Build expression filter for walk-points layer
         const filter = ["all"];
         const COUNTY_EXPR = ["downcase", ["to-string", ["coalesce", ["get","county"], ["get","County"], ["get","COUNTY"], ""]]];
-        const YT_EXPR = ["downcase", ["trim", ["to-string", ["coalesce", ["get","youtube_id"], ["get","youtube"], ["get","YouTube"], ""]]]];
+        const YT_EXPR = ["downcase", ["to-string", ["coalesce",
+            ["get","youtube link"],   // <-- your GeoJSON field
+            ["get","youtube_link"],
+            ["get","youtube_id"],
+            ["get","youtube"],
+            ["get","YouTube"],
+            ""
+        ]]];
 
 
         filter.push([">=", ["to-number", ["get", "incline"]], state.minIncline]);
@@ -1098,9 +929,17 @@
             if (poiMatchIds instanceof Set && !poiMatchIds.has(wid)) continue;
 
             if (wantsYouTube) {
-                const ytRaw = f.properties.youtube_id ?? f.properties.youtube ?? f.properties.YouTube ?? "";
+                const ytRaw =
+                    f.properties["youtube link"] ??
+                    f.properties.youtube_link ??
+                    f.properties.youtube_id ??
+                    f.properties.youtube ??
+                    f.properties.YouTube ??
+                    "";
+
                 const yt = String(ytRaw).trim().toLowerCase();
                 if (!yt || yt === "na") continue;
+
             }
 
             out.push(f);
@@ -1208,6 +1047,29 @@
             tbody.appendChild(tr);
         });
     }
+    function extractYouTubeId(value){
+        if (!value) return "";
+        const s = String(value).trim();
+
+        // If it already looks like an 11-char ID
+        if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+
+        // Try common URL patterns
+        // 1) https://www.youtube.com/watch?v=XXXX
+        let m = s.match(/[?&]v=([^&]+)/);
+        if (m && m[1]) return m[1].slice(0, 11);
+
+        // 2) https://youtu.be/XXXX
+        m = s.match(/youtu\.be\/([^?&/]+)/);
+        if (m && m[1]) return m[1].slice(0, 11);
+
+        // 3) https://www.youtube.com/embed/XXXX
+        m = s.match(/\/embed\/([^?&/]+)/);
+        if (m && m[1]) return m[1].slice(0, 11);
+
+        return "";
+    }
+
     function isRealValue(v){
         if (v === null || v === undefined) return false;
         const s = String(v).trim();
@@ -1275,13 +1137,24 @@
         const iframe = document.getElementById('video');
 
 
-        if (isRealValue(props.youtube_id)) {
+        const ytVal =
+            props["youtube link"] ??
+            props.youtube_link ??
+            props.youtube_id ??
+            props.youtube ??
+            props.YouTube ??
+            "";
+
+        const ytId = extractYouTubeId(ytVal);
+
+        if (isRealValue(ytId)) {
             iframe.style.display = "block";
-            iframe.src = `https://www.youtube.com/embed/${props.youtube_id}`;
+            iframe.src = `https://www.youtube.com/embed/${ytId}`;
         } else {
             iframe.src = "";
             iframe.style.display = "none";
         }
+
 
 
         zoomToRoute(selectedWalkId);
@@ -1328,6 +1201,10 @@
 
         filters.classList.toggle('mobile-open', wantOpen);
 
+        // hard-force clickability on mobile
+        document.getElementById('filtersInner').style.pointerEvents = wantOpen ? "auto" : "";
+        document.getElementById('filtersBackdrop').style.pointerEvents = wantOpen ? "auto" : "none";
+
         btn.setAttribute('aria-expanded', wantOpen ? "true" : "false");
         btn.textContent = wantOpen ? "✕ Close filters" : "☰ Filters";
 
@@ -1351,73 +1228,103 @@
         if (window.matchMedia("(max-width: 768px)").matches) {
             document.getElementById('mobilePanelHandle').style.display = 'block';
         }
+        resetMobilePanelHeight();
+        document.getElementById('appWrap').classList.remove('mobile-panel-collapsed'); // ensure not stuck collapsed
+        document.getElementById('mobilePanelHandle').textContent = "⌄ Hide table";
         applyAllFilters();
         map.flyTo({ center:[-8.2,53.4], zoom:6.5 });
     }
     function toggleMobilePanel(){
         const wrap = document.getElementById('appWrap');
-        wrap.classList.toggle('mobile-panel-collapsed');
-
-        const collapsed = wrap.classList.contains('mobile-panel-collapsed');
         const btn = document.getElementById('mobilePanelHandle');
+
+        // IMPORTANT: clear any dragged inline height first
+        resetMobilePanelHeight();
+
+        wrap.classList.toggle('mobile-panel-collapsed');
+        const collapsed = wrap.classList.contains('mobile-panel-collapsed');
         btn.textContent = collapsed ? "⌃ Show table" : "⌄ Hide table";
 
         setTimeout(() => map.resize(), 50);
     }
 
+
     /* UI HELPERS */
     function toggleDropdown(id) {
         const el = document.getElementById(id);
 
-        // close other dropdown first
-        ['countyDropdown','poiDropdown'].forEach(other => {
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(other => {
             if (other !== id) document.getElementById(other).classList.remove('open');
         });
 
         el.classList.toggle('open');
 
         if (el.classList.contains('open')) {
-            positionDropdown(id);
+            positionDropdown(id); // now positions on BOTH desktop + mobile
         }
     }
+
+
 
     function positionDropdown(dropdownId) {
         const dd = document.getElementById(dropdownId);
         const btn = dd.querySelector('button');
         const menu = dd.querySelector('.dropdown-content');
+        if (!btn || !menu) return;
 
         const r = btn.getBoundingClientRect();
-        menu.style.left = r.left + "px";
-        menu.style.top = (r.bottom + 6) + "px";
+
+        // width matches button
         menu.style.width = Math.max(220, r.width) + "px";
+        menu.style.left = r.left + "px";
+
+        // Try to open BELOW button
+        const gap = 6;
+        const viewportH = window.innerHeight;
+
+        // allow it to "spill out" but still fit on screen
+        const spaceBelow = viewportH - (r.bottom + gap);
+        const spaceAbove = r.top - gap;
+
+        // Preferred: open below if there is room; otherwise open above
+        if (spaceBelow >= 180) {
+            menu.style.top = (r.bottom + gap) + "px";
+            menu.style.maxHeight = Math.min(0.55 * viewportH, spaceBelow - 10) + "px";
+        } else {
+            // open upwards if we're near bottom
+            const maxH = Math.min(0.55 * viewportH, spaceAbove - 10);
+            menu.style.maxHeight = Math.max(140, maxH) + "px";
+            menu.style.top = (r.top - gap - menu.getBoundingClientRect().height) + "px";
+        }
     }
     window.addEventListener('resize', () => {
-        ['countyDropdown','poiDropdown'].forEach(id => {
+        if (window.matchMedia("(max-width: 768px)").matches) return;
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
             const el = document.getElementById(id);
             if (el.classList.contains('open')) positionDropdown(id);
         });
     });
 
     document.getElementById('filtersInner').addEventListener('scroll', () => {
-        ['countyDropdown','poiDropdown'].forEach(id => {
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
             const el = document.getElementById(id);
             if (el.classList.contains('open')) positionDropdown(id);
         });
     });
+
+
     // stops clicks inside the sheet from bubbling weirdly on mobile
     document.getElementById('filtersInner').addEventListener('click', (e) => e.stopPropagation());
 
     // Close dropdown if click outside
     document.addEventListener('click', (e) => {
-        ['countyDropdown','poiDropdown'].forEach(id => {
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
             const el = document.getElementById(id);
             if (!el.contains(e.target)) el.classList.remove('open');
         });
     });
 
     // events
-
-    difficultyFilter.onchange = applyAllFilters;
 
     document.querySelectorAll('#countyDropdown input').forEach(cb => cb.onchange = () => {
         applyAllFilters();
@@ -1433,7 +1340,9 @@
         lengthSlider.noUiSlider.set([0, 30]);
 
         // reset dropdowns/selects
-        difficultyFilter.value = "all";
+        document.querySelector('input[name="difficultyRadio"][value="all"]').checked = true;
+        document.getElementById('difficultyBtn').textContent = "Difficulty";
+
 
         // uncheck counties + pois
         document.querySelectorAll('#countyDropdown input, #poiDropdown input').forEach(cb => cb.checked = false);
@@ -1449,7 +1358,9 @@
         updateDropdownButtonLabels();
 
         applyAllFilters();
-        map.flyTo({ center: IRELAND_VIEW.center, zoom: IRELAND_VIEW.zoom });
+        const v = getIrelandView();
+        map.flyTo({ center: v.center, zoom: v.zoom });
+
     }
 
     // (1) POI AND logic also drives filtering (and selected-walk POIs)
@@ -1458,6 +1369,18 @@
         if (selectedWalkId) applyPOIFilterForSelectedWalk();
         else applyAllFilters();
     });
+    // Difficulty dropdown (radio buttons)
+    document.querySelectorAll('input[name="difficultyRadio"]').forEach(r => {
+        r.addEventListener('change', () => {
+            const v = document.querySelector('input[name="difficultyRadio"]:checked')?.value || "all";
+            document.getElementById('difficultyBtn').textContent =
+                v === "all" ? "Difficulty" : `Difficulty (${v})`;
+
+            closeAllDropdowns();   // optional: auto-close after choosing
+            applyAllFilters();
+        });
+    });
+
 
     // ------------------------------
     // TABLE SORTING + HEADER SEARCH
@@ -1516,7 +1439,11 @@
             }
         });
     });
-    const IRELAND_VIEW = { center: [-8.2, 53.4], zoom: 6.5 };
+    const IRELAND_VIEW_DESKTOP = { center: [-8.2, 53.4], zoom: 6.5 };
+    const IRELAND_VIEW_MOBILE  = { center: [-8.2, 53.4], zoom: 5.6 };
+
+
+
 
     function zoomToSelectedCounties() {
         if (!mapLoaded) return;
@@ -1526,7 +1453,8 @@
 
         // If none selected -> whole Ireland
         if (counties.length === 0) {
-            map.flyTo({ center: IRELAND_VIEW.center, zoom: IRELAND_VIEW.zoom });
+            const v = getIrelandView();
+            map.flyTo({ center: v.center, zoom: v.zoom });
             return;
         }
 
@@ -1549,7 +1477,9 @@
 
         if (!found) {
             // No walk points found for selected county/counties
-            map.flyTo({ center: IRELAND_VIEW.center, zoom: IRELAND_VIEW.zoom });
+            const v = getIrelandView();
+            map.flyTo({ center: v.center, zoom: v.zoom });
+
             return;
         }
 
@@ -1558,8 +1488,84 @@
 
 
     function closeAllDropdowns(){
-        ['countyDropdown','poiDropdown'].forEach(id => document.getElementById(id).classList.remove('open'));
+        ['countyDropdown','poiDropdown','difficultyDropdown']
+            .forEach(id => document.getElementById(id).classList.remove('open'));
     }
+    function resetMobilePanelHeight(){
+        const panel = document.getElementById("panel");
+        if (!panel) return;
+        panel.style.height = "";     // remove inline px height from dragging
+    }
+    const countySearch = document.getElementById('countySearch');
+
+    if (countySearch) {
+        countySearch.addEventListener('input', () => {
+            const q = countySearch.value.trim().toLowerCase();
+            document.querySelectorAll('#countyDropdown .dropdown-content label').forEach(label => {
+                const text = label.textContent.trim().toLowerCase();
+                label.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+
+        // Focus search automatically on mobile
+        document.getElementById('countyBtn').addEventListener('click', () => {
+            setTimeout(() => {
+                if (window.matchMedia("(max-width: 768px)").matches) {
+                    countySearch.focus();
+                }
+            }, 0);
+        });
+    }
+
+
+    // --- Mobile bottom sheet drag to resize panel ---
+    (function enableMobilePanelDrag(){
+        const handle = document.getElementById("mobilePanelHandle");
+        const panel  = document.getElementById("panel");
+        if (!handle || !panel) return;
+
+        let startY = 0;
+        let startH = 0;
+        let dragging = false;
+
+        function isMobile(){ return window.matchMedia("(max-width: 768px)").matches; }
+
+        function onDown(e){
+            if (!isMobile()) return;
+            dragging = true;
+            startY = (e.touches ? e.touches[0].clientY : e.clientY);
+            startH = panel.getBoundingClientRect().height;
+            document.body.style.userSelect = "none";
+        }
+
+        function onMove(e){
+            if (!dragging) return;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY);
+            const dy = y - startY;            // dragging down -> smaller
+            const newH = startH - dy;
+
+            const vh = window.innerHeight;
+            const minH = vh * 0.18;
+            const maxH = vh * 0.75;
+            const clamped = Math.max(minH, Math.min(maxH, newH));
+
+            panel.style.height = clamped + "px";
+            e.preventDefault();
+        }
+
+        function onUp(){
+            dragging = false;
+            document.body.style.userSelect = "";
+        }
+
+        handle.addEventListener("mousedown", onDown);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+
+        handle.addEventListener("touchstart", onDown, {passive:false});
+        window.addEventListener("touchmove", onMove, {passive:false});
+        window.addEventListener("touchend", onUp);
+    })();
 
 </script>
 
