@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Kerry Walks Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+
+    <style>
+        :root{
+            --primary:#1f7a6d;
+            --secondary:#2c3e50;
+            --bg-light:#f7f9fb;
+            --border:#dcdcdc;
+            --text-dark:#2b2b2b;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;color:var(--text-dark);background:var(--bg-light)}
+
+        .thTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+        .sortHandle{
+            font-size:11px;opacity:.8;padding:4px 6px;border-radius:8px;
+            border:1px solid #e3ece9;background:#fff;cursor:pointer;user-select:none;
+        }
+
+        #clearFiltersBtn{
+            background:#fff;color:var(--secondary);border:1px solid var(--border);
+            padding:8px 12px;border-radius:12px;cursor:pointer;font-weight:900;white-space:nowrap;
+        }
+        #clearFiltersBtn:hover{ background: var(--bg-light); }
+
+        #mobilePanelHandle{
+            position:sticky;top:0;z-index:5;display:none;width:100%;
+            margin:0 0 10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+            background:#fff;color:var(--secondary);font-weight:900;cursor:pointer;
+            box-shadow:0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .thSearch{
+            display:none;margin-top:6px;width:100%;height:28px;border:1px solid var(--border);
+            border-radius:8px;padding:0 8px;font-size:12px;font-weight:600;
+        }
+        th.search-open .thSearch{ display:block; }
+
+        /* Top filters bar (desktop default) */
+        #filters{
+            background: linear-gradient(180deg, #ffffff, #fbfcfd);
+            display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);
+        }
+        #filters label{ color:#1f3342;letter-spacing:.2px;font-size:13px;font-weight:600;white-space:nowrap; }
+
+        .filterGroup{
+            display:flex;flex-direction:column;gap:6px;padding:6px 10px;border:1px solid #eef2f5;
+            background:#ffffff;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,0.03);
+        }
+
+        .rangeRow{display:flex;align-items:center;gap:8px}
+        .slider{width:160px}
+
+        .miniInput{
+            width:54px;height:28px;border:1px solid var(--border);border-radius:8px;padding:0 8px;
+            font-weight:700;font-size:12px;color:var(--secondary);background:#fff;
+        }
+        .miniInput:focus{
+            outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(31,122,109,0.15);
+        }
+
+        /* noUiSlider */
+        .noUi-target{border:none;box-shadow:none;background:#e9eef3;border-radius:999px;height:6px}
+        .noUi-connect{background:var(--primary)}
+        .noUi-handle{
+            border:none;box-shadow:0 6px 14px rgba(0,0,0,.12);border-radius:999px;
+            width:18px !important;height:18px !important;right:-9px !important;top:-6px !important;
+        }
+        .noUi-handle:before,.noUi-handle:after{display:none}
+
+        /* Table header tint */
+        #walkTable th{background:#f6faf9;border-bottom:1px solid #e7eeec}
+
+        /* Mobile filters toggle button (shown only on mobile) */
+        #mobileFiltersToggle{
+            display:none;background:#fff;border:1px solid var(--border);border-radius:12px;
+            padding:10px 12px;font-weight:800;color:var(--secondary);cursor:pointer;
+            box-shadow:0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        /* Filters inner row (desktop default) */
+        #filtersInner{
+            -webkit-overflow-scrolling: touch;
+            flex:1;display:flex;align-items:center;gap:18px;flex-wrap:nowrap;
+            overflow-x:auto;overflow-y:visible;
+        }
+
+        /* Logo */
+        #logoPlaceholder{
+            width:120px;height:46px;border-radius:12px;background:#e9eef3;color:#2c3e50;
+            display:flex;align-items:center;justify-content:center;font-weight:900;letter-spacing:1px;
+            flex:0 0 auto;
+        }
+
+        /* DROPDOWNS */
+        .dropdown{ position:relative; z-index:11000; }
+
+        .dropdown-content{
+            display:none;position:fixed;background:#fff;border-radius:8px;border:1px solid var(--border);
+            padding:10px;max-height:240px;overflow-y:auto;box-shadow:0 10px 25px rgba(0,0,0,0.12);
+            z-index:999999;min-width:220px;
+        }
+        .dropdown.open .dropdown-content{display:block}
+
+        .dropdown-content label{
+            display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer;
+        }
+
+        .dropdown button{
+            background:#fff;color:var(--secondary);border:1px solid var(--border);
+            padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;white-space:nowrap;
+        }
+        .dd-search-wrap{
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding-bottom: 8px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #eef2f5;
+            z-index: 1;
+        }
+
+        .dd-search{
+            width:100%;
+            height:34px;
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:0 10px;
+            font-weight:700;
+            font-size:13px;
+        }
+        .dd-search:focus{
+            outline:none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(31,122,109,0.15);
+        }
+
+
+        /* LAYOUT (desktop) */
+        #appWrap{
+            position:relative;width:100%;height:calc(100vh - 70px);
+            display:flex;z-index:1;
+        }
+        #map{width:70%;height:100%;position:relative;z-index:1}
+        #panel{
+            width:30%;height:100%;padding:20px;background:#fff;border-left:1px solid var(--border);
+            overflow-y:auto;position:relative;transition:width .2s ease;
+        }
+
+        #appWrap.panel-collapsed #panel{display:none}
+        #appWrap.panel-collapsed #map{width:100%}
+
+        #panelToggleBtn{
+            position:absolute;top:12px;right:12px;z-index:60;background:var(--primary);color:#fff;
+            border:none;border-radius:10px;padding:10px 12px;font-weight:800;cursor:pointer;
+            box-shadow:0 8px 18px rgba(0,0,0,.18);
+        }
+        #panelToggleBtn:hover{filter:brightness(.95)}
+
+        .actionRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:12px 0 14px}
+        .actionBtn{
+            display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:170px;
+            padding:12px 14px;border-radius:14px;border:1px solid transparent;font-weight:900;cursor:pointer;
+            transition:transform .06s ease, filter .12s ease;
+        }
+        .actionBtn:active{ transform: translateY(1px); }
+        .actionBtn.primary{background:var(--primary);color:#fff;box-shadow:0 10px 18px rgba(31,122,109,0.22)}
+        .actionBtn.primary:hover{filter:brightness(.96)}
+        .actionBtn.secondary{background:#fff;color:var(--secondary);border-color:#dfe7e5}
+        .actionBtn.secondary:hover{background:#f6faf9}
+
+        #walkDetails h2{margin-top:0;color:var(--primary)}
+        #walk-info{background:var(--bg-light);padding:10px;border-radius:8px;font-size:14px;margin-bottom:12px}
+        iframe{width:100%;height:240px;border-radius:10px;margin-bottom:12px;border:0}
+
+        /* TABLE */
+        #walkTable{width:100%;border-collapse:collapse;font-size:13px}
+        #walkTable th,#walkTable td{padding:8px;border-bottom:1px solid var(--border);vertical-align:middle}
+        #walkTable tr{cursor:pointer}
+        #walkTable tr:hover{background:var(--bg-light)}
+        #walkTable th{user-select:none;cursor:pointer;position:sticky;top:0;background:#fff;z-index:1}
+        .th-sort-indicator{font-size:11px;opacity:.75;margin-left:6px}
+
+        .dir-btn{
+            background:#fff;border:1px solid var(--border);color:var(--secondary);
+            padding:6px 10px;border-radius:8px;font-weight:700;
+        }
+        .dir-btn:hover{background:var(--bg-light)}
+        .row-actions{display:flex;gap:8px;justify-content:flex-end}
+        .row-actions button{margin:0}
+
+        /* Small screens */
+        @media (max-width: 520px){
+            .filterGroup{ width:100%; }
+            .dropdown{ width:100%; }
+        }
+
+        /* =========================
+           MOBILE (single source of truth)
+           ========================= */
+        @media (max-width: 768px){
+
+            /* Top bar layout */
+            #filters{
+                display:flex;align-items:center;justify-content:space-between;gap:12px;
+                position: sticky;top: 0;z-index: 4000000;
+                padding: 10px 12px;height:auto;background: linear-gradient(180deg, #ffffff, #fbfcfd);
+            }
+
+            /* Show filters button on mobile */
+            #mobileFiltersToggle{
+                display:inline-flex !important;
+                align-items:center;gap:8px;
+                margin-left:auto;
+                pointer-events:auto;
+            }
+
+            /* Base: hide inner until modal open */
+            #filtersInner{
+                display:none;
+                flex-direction:column;
+                align-items:stretch;
+                gap:12px;
+            }
+
+            /* Modal backdrop */
+            #filtersBackdrop{
+                display:none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.35);
+                z-index: 3999998;
+                pointer-events: auto;
+            }
+
+            /* Modal sheet */
+            #filtersInner{
+                position: fixed;
+                left: 4vw;
+                right: 4vw;
+                top: 60px;
+                transform: none !important;
+                margin: 0 auto;
+                max-width: 520px;
+                width: min(92vw, 520px);
+                max-height: 70vh;
+                overflow: auto;
+                background: #fff;
+                border: 1px solid #e6ecea;
+                border-radius: 16px;
+                padding: 14px;
+                box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+                z-index: 3999999;
+                pointer-events: auto;
+                touch-action: manipulation;
+            }
+
+            #filters.mobile-open #filtersInner{ display:flex; }
+            #filters.mobile-open + #filtersBackdrop{ display:block; }
+
+            /* Make each control full width in the sheet */
+            .filterGroup{ width:100% !important; }
+            .dropdown{ position:relative; width:100% !important; z-index: 1; }
+            .dropdown button{ width:100%; padding:8px 10px; font-size:12px; border-radius:12px; }
+            .dropdown-content{
+                position: fixed !important;
+                z-index: 6000000 !important; /* higher than #filtersInner */
+                max-height: 55vh;
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            /* Make the currently open dropdown always sit above everything else */
+            .dropdown.open{ z-index: 9000000; }
+
+            /* The menu itself goes above the sheet contents */
+            .dropdown.open .dropdown-content{
+                z-index: 9000001 !important;
+            }
+
+            .slider{ width:100%; }
+            .miniInput{ width:48px; height:26px; font-size:12px; padding:0 6px; }
+
+            /* App layout mobile */
+            #appWrap{flex-direction: column;height: calc(100vh - 60px);}
+            #map{width:100%;height:60vh;}
+
+            /* Bottom sheet / panel */
+            #panel{
+                width:100%;
+                height:40vh;
+                max-height:75vh;
+                min-height:18vh;
+                border-left:none;
+                border-top:1px solid var(--border);
+                padding: 10px 14px 14px;
+                overflow:hidden;
+                position:relative;
+                touch-action:none;
+            }
+
+            #walkTableContainer, #walkDetails{
+                height: calc(100% - 52px);
+                overflow:auto;
+            }
+
+            #mobilePanelHandle{
+                display:block;
+                position:sticky;
+                top:0;
+                z-index:5;
+                margin:0 0 8px 0;
+                padding:10px 12px;
+            }
+
+            #mobilePanelHandle::before{
+                content:"";
+                display:block;
+                width:44px;height:5px;border-radius:999px;background:#dfe7e5;margin:0 auto 8px;
+            }
+
+            #panelToggleBtn{ display:none; }
+
+            /* Collapsing table gives map more room */
+            #appWrap.mobile-panel-collapsed #walkTableContainer{ display:none; }
+            #appWrap.mobile-panel-collapsed #panel{ height:auto; padding:10px 14px; }
+            #appWrap.mobile-panel-collapsed #map{ height: calc(100vh - 60px - 62px); }
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div id="filters">
+    <div id="logoPlaceholder" aria-label="Siuloid logo placeholder">Siúlóid</div>
+    <button id="mobileFiltersToggle" type="button" aria-expanded="false" onclick="toggleMobileFilters()">
+        ☰ Filters
+    </button>
+    <div id="filtersInner">
+
+
+        <!-- INCLINE GROUP -->
+        <div class="filterGroup" id="inclineGroup">
+            <label>Incline (m)</label>
+            <div class="rangeRow">
+                <input id="inclineMinInput" class="miniInput" inputmode="numeric" value="0">
+                <div id="inclineSlider" class="slider"></div>
+                <input id="inclineMaxInput" class="miniInput" inputmode="numeric" value="1500">
+            </div>
+        </div>
+
+        <!-- LENGTH GROUP -->
+        <div class="filterGroup" id="lengthGroup">
+            <label>Length (km)</label>
+            <div class="rangeRow">
+                <input id="lengthMinInput" class="miniInput" inputmode="numeric" value="0">
+                <div id="lengthSlider" class="slider"></div>
+                <input id="lengthMaxInput" class="miniInput" inputmode="numeric" value="30">
+            </div>
+        </div>
+
+
+        <div class="dropdown" id="difficultyDropdown">
+            <button id="difficultyBtn" type="button" onclick="toggleDropdown('difficultyDropdown')">Difficulty</button>
+            <div class="dropdown-content">
+                <label><input type="radio" name="difficultyRadio" value="all" checked> All</label>
+                <label><input type="radio" name="difficultyRadio" value="EASY"> Easy</label>
+                <label><input type="radio" name="difficultyRadio" value="MODERATE"> Moderate</label>
+                <label><input type="radio" name="difficultyRadio" value="HARD"> Hard</label>
+            </div>
+        </div>
+
+
+
+        <div class="dropdown" id="countyDropdown">
+        <button id="countyBtn" type="button" onclick="toggleDropdown('countyDropdown')">Counties</button>
+        <div class="dropdown-content">
+            <div class="dd-search-wrap">
+                <input id="countySearch" class="dd-search" type="text" placeholder="Search counties…">
+            </div>
+            <label><input type="checkbox" value="Antrim"> Antrim</label>
+            <label><input type="checkbox" value="Armagh"> Armagh</label>
+            <label><input type="checkbox" value="Carlow"> Carlow</label>
+            <label><input type="checkbox" value="Cavan"> Cavan</label>
+            <label><input type="checkbox" value="Clare"> Clare</label>
+            <label><input type="checkbox" value="Cork"> Cork</label>
+            <label><input type="checkbox" value="Donegal"> Donegal</label>
+            <label><input type="checkbox" value="Down"> Down</label>
+            <label><input type="checkbox" value="Dublin"> Dublin</label>
+            <label><input type="checkbox" value="Fermanagh"> Fermanagh</label>
+            <label><input type="checkbox" value="Galway"> Galway</label>
+            <label><input type="checkbox" value="Kerry"> Kerry</label>
+            <label><input type="checkbox" value="Kildare"> Kildare</label>
+            <label><input type="checkbox" value="Kilkenny"> Kilkenny</label>
+            <label><input type="checkbox" value="Laois"> Laois</label>
+            <label><input type="checkbox" value="Leitrim"> Leitrim</label>
+            <label><input type="checkbox" value="Limerick"> Limerick</label>
+            <label><input type="checkbox" value="Londonderry"> Londonderry</label>
+            <label><input type="checkbox" value="Longford"> Longford</label>
+            <label><input type="checkbox" value="Louth"> Louth</label>
+            <label><input type="checkbox" value="Mayo"> Mayo</label>
+            <label><input type="checkbox" value="Meath"> Meath</label>
+            <label><input type="checkbox" value="Monaghan"> Monaghan</label>
+            <label><input type="checkbox" value="Offaly"> Offaly</label>
+            <label><input type="checkbox" value="Roscommon"> Roscommon</label>
+            <label><input type="checkbox" value="Sligo"> Sligo</label>
+            <label><input type="checkbox" value="Tipperary"> Tipperary</label>
+            <label><input type="checkbox" value="Tyrone"> Tyrone</label>
+            <label><input type="checkbox" value="Waterford"> Waterford</label>
+            <label><input type="checkbox" value="Westmeath"> Westmeath</label>
+            <label><input type="checkbox" value="Wexford"> Wexford</label>
+            <label><input type="checkbox" value="Wicklow"> Wicklow</label>
+        </div>
+    </div>
+
+    <div class="dropdown" id="poiDropdown">
+        <button id="poiBtn" type="button" onclick="toggleDropdown('poiDropdown')">Points of Interest</button>
+        <div class="dropdown-content">
+            <label><input type="checkbox" value="__HAS_YT__"> Has a YouTube video</label>
+            <hr style="border:none;border-top:1px solid #eee;margin:6px 0;">
+            <label><input type="checkbox" value="Bathroom"> Bathroom</label>
+            <label><input type="checkbox" value="Cafe"> Cafe</label>
+            <label><input type="checkbox" value="Car Park"> Car Park</label>
+            <label><input type="checkbox" value="Castle"> Castle</label>
+            <label><input type="checkbox" value="Church"> Church</label>
+            <label><input type="checkbox" value="Lake"> Lake</label>
+            <label><input type="checkbox" value="River"> River</label>
+            <label><input type="checkbox" value="Woods"> Woods</label>
+        </div>
+    </div>
+        <button id="clearFiltersBtn" type="button" onclick="clearAllFilters()">Clear filters</button>
+</div>
+</div>
+<!-- MOBILE FILTERS BACKDROP (added) -->
+<div id="filtersBackdrop" onclick="toggleMobileFilters(false)"></div>
+
+<div id="appWrap">
+    <div id="map"></div>
+
+    <!-- (5) toggle always accessible -->
+    <button id="panelToggleBtn" type="button" onclick="togglePanel()">⤢ Full map</button>
+
+    <div id="panel">
+        <button id="mobilePanelHandle" type="button" onclick="toggleMobilePanel()">
+            ⌄ Hide table
+        </button>
+
+        <div id="walkTableContainer">
+            <table id="walkTable">
+                <thead>
+                <tr>
+                    <th data-col="name">
+                        <div class="thTop">
+                            <span>Name</span>
+                            <span class="sortHandle" data-sort="name" id="sort-name"></span>
+                        </div>
+                        <input class="thSearch" data-col="name" placeholder="Search name…" />
+                    </th>
+
+                    <th data-col="length_km">
+                        <div class="thTop">
+                            <span>Length (km)</span>
+                            <span class="sortHandle" data-sort="length_km" id="sort-length_km"></span>
+                        </div>
+                        <input class="thSearch" data-col="length_km" placeholder="Search length…" />
+                    </th>
+
+                    <th data-col="Difficulty">
+                        <div class="thTop">
+                            <span>Difficulty</span>
+                            <span class="sortHandle" data-sort="Difficulty" id="sort-Difficulty"></span>
+                        </div>
+                        <input class="thSearch" data-col="Difficulty" placeholder="Search Difficulty…" />
+                    </th>
+
+                    <th style="text-align:right">Directions</th>
+                </tr>
+                </thead>
+
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="walkDetails" style="display:none;">
+            <h2 id="walk-name"></h2>
+            <p id="walk-info"></p>
+
+            <!-- (2) directions button for selected walk -->
+            <div class="actionRow">
+                <button class="actionBtn primary" type="button" onclick="openDirectionsForSelected()">📍 Get directions</button>
+                <button class="actionBtn secondary" type="button" onclick="resetSelection()">← Back to all walks</button>
+            </div>
+
+
+            <iframe id="video" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    // MOBILE: ensure filters start closed
+    if (window.matchMedia("(max-width: 768px)").matches) {
+        document.getElementById('filters').classList.remove('mobile-open');
+        document.getElementById('mobileFiltersToggle').setAttribute('aria-expanded', "false");
+        document.getElementById('mobileFiltersToggle').textContent = "☰ Filters";
+    }
+
+    mapboxgl.accessToken = 'pk.eyJ1Ijoib2hhcmEyazEiLCJhIjoiY21rbnlmemFsMDBybzNmcXJjbWtuemY0MiJ9.hp29ymmKX59CZ7vXTU0yQw';
+
+    let mapLoaded = false;
+    let selectedWalkId = null;
+
+    // (9) table sorting state
+    const sortState = { key: "name", dir: "asc" };
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [-8.2, 53.4],
+        zoom: 6.5
+    });
+
+    function pickNearestWalkFeature(e, radiusPx = 18) {
+        const bbox = [
+            [e.point.x - radiusPx, e.point.y - radiusPx],
+            [e.point.x + radiusPx, e.point.y + radiusPx]
+        ];
+
+        const feats = map.queryRenderedFeatures(bbox, { layers: ['walk-points'] });
+        if (!feats.length) return null;
+
+        let best = feats[0];
+        let bestD2 = Infinity;
+
+        for (const f of feats) {
+            const p = map.project(f.geometry.coordinates);
+            const dx = p.x - e.point.x;
+            const dy = p.y - e.point.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < bestD2) { bestD2 = d2; best = f; }
+        }
+        return best;
+    }
+
+    // (3) remove ALL basemap labels (roads/rivers/lakes/bays etc)
+    function hideBaseMapLabelsAndRoads() {
+        const style = map.getStyle();
+        if (!style || !style.layers) return;
+
+        for (const layer of style.layers) {
+            try {
+                // Hide basemap labels
+                if (layer.type === "symbol" && layer.source !== "pois") {
+                    map.setLayoutProperty(layer.id, "visibility", "none");
+                    continue;
+                }
+
+                // Hide road markings (basemap road lines)
+                // This is heuristic based on Mapbox Streets layer ids.
+                if (layer.type === "line") {
+                    const id = (layer.id || "").toLowerCase();
+                    const src = (layer.source || "").toLowerCase();
+
+                    const looksLikeRoad =
+                        id.includes("road") ||
+                        id.includes("street") ||
+                        id.includes("highway") ||
+                        id.includes("motorway") ||
+                        id.includes("bridge") ||
+                        id.includes("tunnel") ||
+                        id.includes("rail") ||
+                        id.includes("ferry");
+
+                    // Most basemap roads come from "composite"
+                    if (src === "composite" && looksLikeRoad) {
+                        map.setLayoutProperty(layer.id, "visibility", "none");
+                    }
+                }
+            } catch (e) {}
+        }
+    }
+
+    function getIrelandView(){
+        return window.matchMedia("(max-width: 768px)").matches ? IRELAND_VIEW_MOBILE : IRELAND_VIEW_DESKTOP;
+    }
+    // Keep dropdown label text always visible + show counts
+    function updateDropdownButtonLabels() {
+        const countyCount = document.querySelectorAll('#countyDropdown input:checked').length;
+        const poiCount = document.querySelectorAll('#poiDropdown input:checked').length;
+
+        document.getElementById('countyBtn').textContent = countyCount ? `Counties (${countyCount})` : 'Counties';
+        document.getElementById('poiBtn').textContent = poiCount ? `Points of Interest (${poiCount})` : 'Points of Interest';
+    }
+
+    map.on('style.load', () => {
+        hideBaseMapLabelsAndRoads();
+    });
+
+    map.on('load', () => {
+        mapLoaded = true;
+
+        map.addSource('walks', { type:'geojson', data:'walks.geojson' });
+        map.addSource('routes',{ type:'geojson', data:'routes.geojson' });
+        map.addSource('pois',  { type:'geojson', data:'pois.geojson' });
+
+        // (7) smaller walk markers
+        map.addLayer({
+            id:'walk-points',
+            type:'circle',
+            source:'walks',
+            paint:{ 'circle-radius':4, 'circle-color':'#007cbf' } // was 6
+        });
+
+        // routes
+        map.addLayer({
+            id:'walk-routes',
+            type:'line',
+            source:'routes',
+            paint:{ 'line-width':3, 'line-color':'#d7191c' } // slightly slimmer
+        });
+
+        // POI icons
+        const poiIcons = {
+            Bathroom: 'bathroom',
+            Cafe: 'cafe',
+            'Car Park': 'car-park',
+            Castle: 'castle',
+            Church: 'church',
+            Lake: 'lake',
+            River: 'river',
+            Woods: 'woods'
+        };
+
+        Object.entries(poiIcons).forEach(([type, name]) => {
+            map.loadImage(`icons/${name}.png`, (error, image) => {
+                if (error) return console.error(`Error loading icon: ${name}`, error);
+                if (!map.hasImage(name)) map.addImage(name, image, { sdf: false });
+            });
+        });
+
+        map.addLayer({
+            id: 'poi-icons',
+            type: 'symbol',
+            source: 'pois',
+            layout: {
+                'icon-image': [
+                    'match', ['get', 'type'],
+                    'Bathroom', 'bathroom',
+                    'Cafe', 'cafe',
+                    'Car Park', 'car-park',
+                    'Castle', 'castle',
+                    'Church', 'church',
+                    'Lake', 'lake',
+                    'River', 'river',
+                    'Woods', 'woods',
+                    'dot-11'
+                ],
+                // (7) POI icon size: 0.5 is already smaller than "typical default 1.0"
+                // Most Mapbox symbol icons are around 1.0 (varies by sprite). 0.5–0.8 is a common reduced size.
+                'icon-size': 0.5,
+
+                // POI label
+                'text-field': ['get', 'name'],
+                'text-size': 10,
+                'text-offset': [0, -2.2],
+                'text-anchor': 'bottom',
+
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'text-allow-overlap': true,
+                'text-ignore-placement': true
+            },
+            paint: {
+                'text-color': '#2c3e50',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 1
+            }
+        });
+
+        // Hide everything initially
+        map.setFilter('poi-icons', ['==', 'walkid', -1]);
+        map.setFilter('walk-routes', ['==', 'walkid', -1]);
+
+        // Hover popup for walk names only (your own data)
+        const hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, offset:10 });
+        map.on('mouseenter', 'walk-points', (e) => {
+            map.getCanvas().style.cursor = 'pointer';
+            const feature = e.features[0];
+            hoverPopup.setLngLat(feature.geometry.coordinates)
+                .setHTML(`<strong>${feature.properties.name}</strong>`)
+                .addTo(map);
+        });
+        map.on('mouseleave', 'walk-points', () => {
+            map.getCanvas().style.cursor = '';
+            hoverPopup.remove();
+        });
+
+        // Selecting a walk
+        map.on('click', 'walk-points', (e) => {
+            const feature = pickNearestWalkFeature(e, 22); // pixel tolerance
+            if (!feature) return;
+            selectWalkById(feature.properties.walkid);
+        });
+
+
+        // keep table in sync when map is idle (and on filter changes)
+        map.on('idle', () => updateWalkTable());
+        updateDropdownButtonLabels();
+        applyAllFilters(); // initial
+        // set initial view based on device
+        const v = getIrelandView();
+        map.jumpTo({ center: v.center, zoom: v.zoom });
+
+    });
+    const inclineMinInput = document.getElementById('inclineMinInput');
+    const inclineMaxInput = document.getElementById('inclineMaxInput');
+    const lengthMinInput  = document.getElementById('lengthMinInput');
+    const lengthMaxInput  = document.getElementById('lengthMaxInput');
+
+    /* SLIDERS */
+    const inclineSlider = document.getElementById('inclineSlider');
+    const lengthSlider = document.getElementById('lengthSlider');
+
+
+    noUiSlider.create(inclineSlider, { start:[0,1500], connect:true, range:{min:0,max:1500}, step:50 });
+    noUiSlider.create(lengthSlider,  { start:[0,30],   connect:true, range:{min:0,max:30},   step:1  });
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function syncInputsFromSliders(){
+        const [iMin, iMax] = inclineSlider.noUiSlider.get().map(v => Math.round(Number(v)));
+        const [lMin, lMax] = lengthSlider.noUiSlider.get().map(v => Math.round(Number(v)));
+
+        inclineMinInput.value = iMin;
+        inclineMaxInput.value = iMax;
+        lengthMinInput.value  = lMin;
+        lengthMaxInput.value  = lMax;
+    }
+
+    inclineSlider.noUiSlider.on('update', () => {
+        syncInputsFromSliders();
+        applyAllFilters();
+    });
+
+    lengthSlider.noUiSlider.on('update', () => {
+        syncInputsFromSliders();
+        applyAllFilters();
+    });
+
+    function applyInputsToIncline(){
+        let min = Number(inclineMinInput.value);
+        let max = Number(inclineMaxInput.value);
+        if (Number.isNaN(min)) min = 0;
+        if (Number.isNaN(max)) max = 1500;
+        min = clamp(min, 0, 1500);
+        max = clamp(max, 0, 1500);
+        if (min > max) [min, max] = [max, min];
+        inclineSlider.noUiSlider.set([min, max]);
+    }
+
+    function applyInputsToLength(){
+        let min = Number(lengthMinInput.value);
+        let max = Number(lengthMaxInput.value);
+        if (Number.isNaN(min)) min = 0;
+        if (Number.isNaN(max)) max = 30;
+        min = clamp(min, 0, 30);
+        max = clamp(max, 0, 30);
+        if (min > max) [min, max] = [max, min];
+        lengthSlider.noUiSlider.set([min, max]);
+    }
+
+    [inclineMinInput, inclineMaxInput].forEach(inp => {
+        inp.addEventListener('change', applyInputsToIncline);
+        inp.addEventListener('blur', applyInputsToIncline);
+    });
+
+    [lengthMinInput, lengthMaxInput].forEach(inp => {
+        inp.addEventListener('change', applyInputsToLength);
+        inp.addEventListener('blur', applyInputsToLength);
+    });
+
+    // initial sync
+    syncInputsFromSliders();
+
+    /* (1)(8) One unified filter pipeline for map + table */
+    function getFilterState() {
+        const [minIncline, maxIncline] = inclineSlider.noUiSlider.get().map(Number);
+        const [minLength, maxLength] = lengthSlider.noUiSlider.get().map(Number);
+
+
+        const counties = [...document.querySelectorAll('#countyDropdown input:checked')].map(cb => cb.value);
+        const poiTypes  = [...document.querySelectorAll('#poiDropdown input:checked')].map(cb => cb.value);
+
+        return {
+            minIncline, maxIncline,
+            minLength, maxLength,
+            Difficulty: document.querySelector('input[name="difficultyRadio"]:checked')?.value || "all",
+            counties,
+            poiTypes
+        };
+    }
+
+    // (1) POI AND select: returns walkids that contain ALL selected POI types
+    function getWalkIdsMatchingPOI_AND(selectedTypes) {
+        if (!mapLoaded) return new Set();
+        if (!selectedTypes || selectedTypes.length === 0) return null;
+
+        // Ignore the special YouTube filter here (handled separately)
+        const poiOnly = selectedTypes.filter(t => t !== "__HAS_YT__");
+        if (poiOnly.length === 0) return null;
+
+        const poiFeatures = map.querySourceFeatures('pois');
+        const byWalk = new Map();
+
+        poiFeatures.forEach(f => {
+            const wid = Number(f.properties.walkid);
+            const t = f.properties.type;
+            if (!byWalk.has(wid)) byWalk.set(wid, new Set());
+            byWalk.get(wid).add(t);
+        });
+
+        const matching = new Set();
+        byWalk.forEach((typesSet, wid) => {
+            const ok = poiOnly.every(t => typesSet.has(t));
+            if (ok) matching.add(wid);
+        });
+
+        return matching;
+    }
+
+
+    function buildMapboxFilterFromState(state) {
+        // Build expression filter for walk-points layer
+        const filter = ["all"];
+        const COUNTY_EXPR = ["downcase", ["to-string", ["coalesce", ["get","county"], ["get","County"], ["get","COUNTY"], ""]]];
+        const YT_EXPR = ["downcase", ["to-string", ["coalesce",
+            ["get","youtube link"],   // <-- your GeoJSON field
+            ["get","youtube_link"],
+            ["get","youtube_id"],
+            ["get","youtube"],
+            ["get","YouTube"],
+            ""
+        ]]];
+
+
+        filter.push([">=", ["to-number", ["get", "incline"]], state.minIncline]);
+        filter.push(["<=", ["to-number", ["get", "incline"]], state.maxIncline]);
+
+        filter.push([">=", ["to-number", ["get", "length_km"]], state.minLength]);
+        filter.push(["<=", ["to-number", ["get", "length_km"]], state.maxLength]);
+
+        if (state.Difficulty !== "all") {
+            filter.push(["==", ["get", "Difficulty"], state.Difficulty]);
+        }
+
+        if (state.counties.length > 0) {
+            const countiesLower = state.counties.map(c => String(c).trim().toLowerCase());
+            filter.push(["in", COUNTY_EXPR, ["literal", countiesLower]]);
+        }
+        const wantsYouTube = state.poiTypes.includes("__HAS_YT__");
+        if (wantsYouTube) {
+            filter.push(["all", ["!=", YT_EXPR, ""], ["!=", YT_EXPR, "na"]]);
+        }
+
+
+        const poiMatchIds = getWalkIdsMatchingPOI_AND(state.poiTypes);
+        if (poiMatchIds instanceof Set) {
+            filter.push(["in", ["to-number", ["get", "walkid"]], ["literal", [...poiMatchIds]]]);
+        }
+
+        return filter;
+    }
+
+    function applyAllFilters() {
+        if (!mapLoaded) return;
+        if (selectedWalkId) return; // when a walk is selected, we don't apply list filters to map
+
+        const state = getFilterState();
+        const filter = buildMapboxFilterFromState(state);
+        map.setFilter('walk-points', filter);
+
+        // keep routes hidden in list view
+        map.setFilter('walk-routes', ['==', 'walkid', -1]);
+
+        updateDropdownButtonLabels();
+        updateWalkTable();
+    }
+
+    // (8) Table uses same state as map (even if not relying on map filters)
+    function getFilteredWalkFeatures() {
+        if (!mapLoaded) return [];
+        const state = getFilterState();
+
+        const wantsYouTube = state.poiTypes.includes("__HAS_YT__");
+        const countiesLower = state.counties.map(c => String(c).trim().toLowerCase());
+
+        const poiMatchIds = getWalkIdsMatchingPOI_AND(state.poiTypes);
+
+        const features = map.querySourceFeatures('walks');
+        const seen = new Set();
+        const out = [];
+
+        for (const f of features) {
+            const wid = Number(f.properties.walkid);
+            if (seen.has(wid)) continue;
+            seen.add(wid);
+
+            const incline = Number(f.properties.incline);
+            const length  = Number(f.properties.length_km);
+            const diff    = f.properties.Difficulty;
+
+            const countyRaw =
+                f.properties.county ?? f.properties.County ?? f.properties.COUNTY ?? "";
+            const county = String(countyRaw).trim().toLowerCase();
+
+            if (incline < state.minIncline || incline > state.maxIncline) continue;
+            if (length  < state.minLength  || length  > state.maxLength)  continue;
+            if (state.Difficulty !== "all" && diff !== state.Difficulty) continue;
+            if (countiesLower.length > 0 && !countiesLower.includes(county)) continue;
+            if (poiMatchIds instanceof Set && !poiMatchIds.has(wid)) continue;
+
+            if (wantsYouTube) {
+                const ytRaw =
+                    f.properties["youtube link"] ??
+                    f.properties.youtube_link ??
+                    f.properties.youtube_id ??
+                    f.properties.youtube ??
+                    f.properties.YouTube ??
+                    "";
+
+                const yt = String(ytRaw).trim().toLowerCase();
+                if (!yt || yt === "na") continue;
+
+            }
+
+            out.push(f);
+        }
+
+        return out;
+    }
+
+
+    /* (2) Directions helpers */
+    function openDirectionsTo(lng, lat) {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat + "," + lng)}&travelmode=driving`;
+        window.open(url, "_blank", "noopener");
+    }
+
+    function getWalkFeatureById(walkId) {
+        const features = map.querySourceFeatures('walks');
+        return features.find(f => Number(f.properties.walkid) === Number(walkId)) || null;
+    }
+
+    function openDirectionsForSelected() {
+        if (!selectedWalkId) return;
+        const f = getWalkFeatureById(selectedWalkId);
+        if (!f) return;
+        const [lng, lat] = f.geometry.coordinates;
+        openDirectionsTo(lng, lat);
+    }
+
+    /* (9) sortable table */
+    function setSortIndicators() {
+        ["name","length_km","Difficulty"].forEach(k => {
+            document.getElementById("sort-" + k).textContent = "↕";
+        });
+        const arrow = sortState.dir === "asc" ? "▲" : "▼";
+        const el = document.getElementById("sort-" + sortState.key);
+        if (el) el.textContent = arrow;
+    }
+
+
+    function updateWalkTable() {
+        if (!mapLoaded || selectedWalkId) return;
+
+        const tbody = document.querySelector('#walkTable tbody');
+        tbody.innerHTML = '';
+
+        let rows = getFilteredWalkFeatures();
+
+        // apply sorting
+        rows.sort((a,b) => {
+            const k = sortState.key;
+            let av = a.properties[k];
+            let bv = b.properties[k];
+
+            if (k === "length_km") { av = Number(av); bv = Number(bv); }
+            else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+
+            if (av < bv) return sortState.dir === "asc" ? -1 : 1;
+            if (av > bv) return sortState.dir === "asc" ? 1 : -1;
+            return 0;
+        });
+
+        setSortIndicators();
+
+        rows = rows.filter(f => {
+            const name = String(f.properties.name || "").toLowerCase();
+            const len  = String(f.properties.length_km || "").toLowerCase();
+            const diff = String(f.properties.Difficulty || "").toLowerCase();
+
+            if (columnSearch.name && !name.includes(columnSearch.name)) return false;
+            if (columnSearch.length_km && !len.includes(columnSearch.length_km)) return false;
+            if (columnSearch.Difficulty && !diff.includes(columnSearch.Difficulty)) return false;
+            return true;
+        });
+
+        rows.forEach(f => {
+            const walkId = Number(f.properties.walkid);
+            const [lng, lat] = f.geometry.coordinates;
+
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+        <td>${f.properties.name}</td>
+        <td>${f.properties.length_km}</td>
+        <td>${f.properties.Difficulty}</td>
+        <td>
+          <div class="row-actions">
+            <button class="dir-btn" type="button" data-dir="1">Get directions</button>
+          </div>
+        </td>
+      `;
+
+            // row click selects walk
+            tr.addEventListener('click', (ev) => {
+                // if user clicked the directions button, don't select
+                if (ev.target && ev.target.matches('button[data-dir="1"]')) return;
+                selectWalkFromTable(walkId);
+            });
+
+            // directions button
+            tr.querySelector('button[data-dir="1"]').addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                openDirectionsTo(lng, lat);
+            });
+
+            tbody.appendChild(tr);
+        });
+    }
+    function extractYouTubeId(value){
+        if (!value) return "";
+        const s = String(value).trim();
+
+        // If it already looks like an 11-char ID
+        if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+
+        // Try common URL patterns
+        // 1) https://www.youtube.com/watch?v=XXXX
+        let m = s.match(/[?&]v=([^&]+)/);
+        if (m && m[1]) return m[1].slice(0, 11);
+
+        // 2) https://youtu.be/XXXX
+        m = s.match(/youtu\.be\/([^?&/]+)/);
+        if (m && m[1]) return m[1].slice(0, 11);
+
+        // 3) https://www.youtube.com/embed/XXXX
+        m = s.match(/\/embed\/([^?&/]+)/);
+        if (m && m[1]) return m[1].slice(0, 11);
+
+        return "";
+    }
+
+    function isRealValue(v){
+        if (v === null || v === undefined) return false;
+        const s = String(v).trim();
+        return s !== "" && s.toLowerCase() !== "na";
+    }
+    function selectWalkFromTable(walkId) {
+        selectWalkById(walkId);
+    }
+
+    /* POIs on selected walk */
+    function applyPOIFilterForSelectedWalk() {
+        if (!selectedWalkId) return;
+
+        const types = [...document.querySelectorAll('#poiDropdown input:checked')].map(cb => cb.value);
+
+        if (types.length === 0) {
+            map.setFilter('poi-icons', ['==',['get','walkid'], selectedWalkId]);
+            return;
+        }
+
+        map.setFilter('poi-icons', [
+            'all',
+            ['==',['to-number',['get','walkid']], Number(selectedWalkId)],
+            ['in',['get','type'], ['literal', types]]
+        ]);
+    }
+    function selectWalkById(walkId) {
+        const feature = getWalkFeatureById(walkId);
+        if (!feature) return;
+
+        const props = feature.properties;
+        selectedWalkId = Number(props.walkid);
+
+        // show only selected
+        map.setFilter('walk-points', ['==','walkid', selectedWalkId]);
+        map.setFilter('walk-routes', ['==','walkid', selectedWalkId]);
+
+        // show POIs for selected walk
+        applyPOIFilterForSelectedWalk();
+
+        // panel UI
+        document.getElementById('mobilePanelHandle').style.display = 'none';
+        document.getElementById('walkTableContainer').style.display = 'none';
+        document.getElementById('walkDetails').style.display = 'block';
+        document.getElementById('walk-name').innerText = props.name;
+        const parts = [
+            `Length: ${props.length_km} km`,
+            `Incline: ${props.incline} m`,
+            `Difficulty: ${props.Difficulty}`
+        ];
+
+// Only add if not NA / not empty
+
+
+        if (isRealValue(props.opening_hours)) {
+            parts.push(`<strong>Opening Hours: ${props.opening_hours}</strong>`);
+        }
+        if (isRealValue(props.entery_fee)) {
+            parts.push(`<strong>Entry Cost: ${props.entery_fee}</strong>`);
+        }
+
+        document.getElementById('walk-info').innerHTML = parts.join(" | ");
+
+
+        const iframe = document.getElementById('video');
+
+
+        const ytVal =
+            props["youtube link"] ??
+            props.youtube_link ??
+            props.youtube_id ??
+            props.youtube ??
+            props.YouTube ??
+            "";
+
+        const ytId = extractYouTubeId(ytVal);
+
+        if (isRealValue(ytId)) {
+            iframe.style.display = "block";
+            iframe.src = `https://www.youtube.com/embed/${ytId}`;
+        } else {
+            iframe.src = "";
+            iframe.style.display = "none";
+        }
+
+
+
+        zoomToRoute(selectedWalkId);
+    }
+
+
+    function zoomToRoute(walkId) {
+        const features = map.querySourceFeatures('routes');
+        const bounds = new mapboxgl.LngLatBounds();
+
+        features.forEach(f => {
+            if (Number(f.properties.walkid) === Number(walkId)) {
+                const coords = (f.geometry.type === 'LineString') ? [f.geometry.coordinates] : f.geometry.coordinates;
+                coords.flat().forEach(c => bounds.extend(c));
+            }
+        });
+
+        if (!bounds.isEmpty()) {
+            map.fitBounds(bounds, { padding: 50, maxZoom: 14, duration: 800 });
+        }
+    }
+
+    /* (5) Collapse/expand right panel */
+    function togglePanel() {
+        const wrap = document.getElementById('appWrap');
+        wrap.classList.toggle('panel-collapsed');
+
+        const collapsed = wrap.classList.contains('panel-collapsed');
+        document.getElementById('panelToggleBtn').textContent = collapsed ? "⤡ Show panel" : "⤢ Full map";
+
+        // Mapbox needs resize after container size changes
+        setTimeout(() => map.resize(), 50);
+    }
+    function toggleMobileFilters(forceState){
+        const filters = document.getElementById('filters');
+        const btn = document.getElementById('mobileFiltersToggle');
+
+        const wantOpen = (typeof forceState === "boolean")
+            ? forceState
+            : !filters.classList.contains('mobile-open');
+
+        // close any dropdown menus when opening/closing modal
+        closeAllDropdowns();
+
+        filters.classList.toggle('mobile-open', wantOpen);
+
+        // hard-force clickability on mobile
+        document.getElementById('filtersInner').style.pointerEvents = wantOpen ? "auto" : "";
+        document.getElementById('filtersBackdrop').style.pointerEvents = wantOpen ? "auto" : "none";
+
+        btn.setAttribute('aria-expanded', wantOpen ? "true" : "false");
+        btn.textContent = wantOpen ? "✕ Close filters" : "☰ Filters";
+
+        // stop the page behind from scrolling when modal is open
+        document.body.style.overflow = wantOpen ? "hidden" : "";
+
+        // Mapbox resize safety
+        setTimeout(() => map.resize(), 50);
+    }
+
+    /* RESET */
+    function resetSelection() {
+        selectedWalkId = null;
+
+        // restore list view filters
+        document.getElementById('walkDetails').style.display='none';
+        document.getElementById('walkTableContainer').style.display = 'block';
+
+        map.setFilter('poi-icons',['==','walkid',-1]);
+        map.setFilter('walk-routes',['==','walkid',-1]);
+        if (window.matchMedia("(max-width: 768px)").matches) {
+            document.getElementById('mobilePanelHandle').style.display = 'block';
+        }
+        resetMobilePanelHeight();
+        document.getElementById('appWrap').classList.remove('mobile-panel-collapsed'); // ensure not stuck collapsed
+        document.getElementById('mobilePanelHandle').textContent = "⌄ Hide table";
+        applyAllFilters();
+        map.flyTo({ center:[-8.2,53.4], zoom:6.5 });
+    }
+    function toggleMobilePanel(){
+        const wrap = document.getElementById('appWrap');
+        const btn = document.getElementById('mobilePanelHandle');
+
+        // IMPORTANT: clear any dragged inline height first
+        resetMobilePanelHeight();
+
+        wrap.classList.toggle('mobile-panel-collapsed');
+        const collapsed = wrap.classList.contains('mobile-panel-collapsed');
+        btn.textContent = collapsed ? "⌃ Show table" : "⌄ Hide table";
+
+        setTimeout(() => map.resize(), 50);
+    }
+
+
+    /* UI HELPERS */
+    function toggleDropdown(id) {
+        const el = document.getElementById(id);
+
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(other => {
+            if (other !== id) document.getElementById(other).classList.remove('open');
+        });
+
+        el.classList.toggle('open');
+
+        if (el.classList.contains('open')) {
+            positionDropdown(id); // now positions on BOTH desktop + mobile
+        }
+    }
+
+
+
+    function positionDropdown(dropdownId) {
+        const dd = document.getElementById(dropdownId);
+        const btn = dd.querySelector('button');
+        const menu = dd.querySelector('.dropdown-content');
+        if (!btn || !menu) return;
+
+        const r = btn.getBoundingClientRect();
+
+        // width matches button
+        menu.style.width = Math.max(220, r.width) + "px";
+        menu.style.left = r.left + "px";
+
+        // Try to open BELOW button
+        const gap = 6;
+        const viewportH = window.innerHeight;
+
+        // allow it to "spill out" but still fit on screen
+        const spaceBelow = viewportH - (r.bottom + gap);
+        const spaceAbove = r.top - gap;
+
+        // Preferred: open below if there is room; otherwise open above
+        if (spaceBelow >= 180) {
+            menu.style.top = (r.bottom + gap) + "px";
+            menu.style.maxHeight = Math.min(0.55 * viewportH, spaceBelow - 10) + "px";
+        } else {
+            // open upwards if we're near bottom
+            const maxH = Math.min(0.55 * viewportH, spaceAbove - 10);
+            menu.style.maxHeight = Math.max(140, maxH) + "px";
+            menu.style.top = (r.top - gap - menu.getBoundingClientRect().height) + "px";
+        }
+    }
+    window.addEventListener('resize', () => {
+        if (window.matchMedia("(max-width: 768px)").matches) return;
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el.classList.contains('open')) positionDropdown(id);
+        });
+    });
+
+    document.getElementById('filtersInner').addEventListener('scroll', () => {
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el.classList.contains('open')) positionDropdown(id);
+        });
+    });
+
+
+    // stops clicks inside the sheet from bubbling weirdly on mobile
+    document.getElementById('filtersInner').addEventListener('click', (e) => e.stopPropagation());
+
+    // Close dropdown if click outside
+    document.addEventListener('click', (e) => {
+        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el.contains(e.target)) el.classList.remove('open');
+        });
+    });
+
+    // events
+
+    document.querySelectorAll('#countyDropdown input').forEach(cb => cb.onchange = () => {
+        applyAllFilters();
+        zoomToSelectedCounties();
+    });
+
+    function clearAllFilters() {
+        // if a walk is selected, go back first
+        if (selectedWalkId) resetSelection();
+
+        // reset sliders
+        inclineSlider.noUiSlider.set([0, 1500]);
+        lengthSlider.noUiSlider.set([0, 30]);
+
+        // reset dropdowns/selects
+        document.querySelector('input[name="difficultyRadio"][value="all"]').checked = true;
+        document.getElementById('difficultyBtn').textContent = "Difficulty";
+
+
+        // uncheck counties + pois
+        document.querySelectorAll('#countyDropdown input, #poiDropdown input').forEach(cb => cb.checked = false);
+
+        // clear table column searches
+        columnSearch.name = "";
+        columnSearch.length_km = "";
+        columnSearch.Difficulty = "";
+        document.querySelectorAll('.thSearch').forEach(inp => inp.value = "");
+        document.querySelectorAll('#walkTable thead th[data-col]').forEach(th => th.classList.remove('search-open'));
+
+        closeAllDropdowns();
+        updateDropdownButtonLabels();
+
+        applyAllFilters();
+        const v = getIrelandView();
+        map.flyTo({ center: v.center, zoom: v.zoom });
+
+    }
+
+    // (1) POI AND logic also drives filtering (and selected-walk POIs)
+    document.querySelectorAll('#poiDropdown input').forEach(cb => cb.onchange = () => {
+        updateDropdownButtonLabels();
+        if (selectedWalkId) applyPOIFilterForSelectedWalk();
+        else applyAllFilters();
+    });
+    // Difficulty dropdown (radio buttons)
+    document.querySelectorAll('input[name="difficultyRadio"]').forEach(r => {
+        r.addEventListener('change', () => {
+            const v = document.querySelector('input[name="difficultyRadio"]:checked')?.value || "all";
+            document.getElementById('difficultyBtn').textContent =
+                v === "all" ? "Difficulty" : `Difficulty (${v})`;
+
+            closeAllDropdowns();   // optional: auto-close after choosing
+            applyAllFilters();
+        });
+    });
+
+
+    // ------------------------------
+    // TABLE SORTING + HEADER SEARCH
+    // ------------------------------
+
+    const columnSearch = {
+        name: "",
+        length_km: "",
+        Difficulty: ""
+    };
+
+    /* Sorting ONLY when clicking the small sort handle */
+    document.querySelectorAll('.sortHandle').forEach(el => {
+        el.addEventListener('click', (ev) => {
+            ev.stopPropagation();   // prevent opening search
+            const key = el.getAttribute('data-sort');
+
+            if (sortState.key === key) {
+                sortState.dir = (sortState.dir === "asc" ? "desc" : "asc");
+            } else {
+                sortState.key = key;
+                sortState.dir = "asc";
+            }
+
+            updateWalkTable();
+        });
+    });
+
+    /* Clicking a TH opens/closes its search box */
+    document.querySelectorAll('#walkTable thead th[data-col]').forEach(th => {
+        th.addEventListener('click', () => {
+            th.classList.toggle('search-open');
+
+            const input = th.querySelector('.thSearch');
+            if (th.classList.contains('search-open')) {
+                input.focus();
+            }
+        });
+    });
+
+    /* Typing in search filters the table */
+    document.querySelectorAll('.thSearch').forEach(input => {
+        input.addEventListener('input', () => {
+            const col = input.getAttribute('data-col');
+            columnSearch[col] = input.value.trim().toLowerCase();
+            updateWalkTable();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") {
+                const col = input.getAttribute('data-col');
+                columnSearch[col] = "";
+                input.value = "";
+                input.closest('th').classList.remove('search-open');
+                updateWalkTable();
+            }
+        });
+    });
+    const IRELAND_VIEW_DESKTOP = { center: [-8.2, 53.4], zoom: 6.5 };
+    const IRELAND_VIEW_MOBILE  = { center: [-8.2, 53.4], zoom: 5.6 };
+
+
+
+
+    function zoomToSelectedCounties() {
+        if (!mapLoaded) return;
+        if (selectedWalkId) return; // don’t override zoom when a walk is selected
+
+        const counties = [...document.querySelectorAll('#countyDropdown input:checked')].map(cb => cb.value);
+
+        // If none selected -> whole Ireland
+        if (counties.length === 0) {
+            const v = getIrelandView();
+            map.flyTo({ center: v.center, zoom: v.zoom });
+            return;
+        }
+
+        // Fit bounds to all walk points in selected counties
+        const features = map.querySourceFeatures('walks');
+        const bounds = new mapboxgl.LngLatBounds();
+        let found = false;
+
+        for (const f of features) {
+            const cRaw = f.properties.county ?? f.properties.County ?? f.properties.COUNTY ?? "";
+            const c = String(cRaw).trim();
+            if (!counties.includes(c)) continue;
+
+
+            if (f.geometry && f.geometry.type === "Point") {
+                bounds.extend(f.geometry.coordinates);
+                found = true;
+            }
+        }
+
+        if (!found) {
+            // No walk points found for selected county/counties
+            const v = getIrelandView();
+            map.flyTo({ center: v.center, zoom: v.zoom });
+
+            return;
+        }
+
+        map.fitBounds(bounds, { padding: 60, maxZoom: 10, duration: 700 });
+    }
+
+
+    function closeAllDropdowns(){
+        ['countyDropdown','poiDropdown','difficultyDropdown']
+            .forEach(id => document.getElementById(id).classList.remove('open'));
+    }
+    function resetMobilePanelHeight(){
+        const panel = document.getElementById("panel");
+        if (!panel) return;
+        panel.style.height = "";     // remove inline px height from dragging
+    }
+    const countySearch = document.getElementById('countySearch');
+
+    if (countySearch) {
+        countySearch.addEventListener('input', () => {
+            const q = countySearch.value.trim().toLowerCase();
+            document.querySelectorAll('#countyDropdown .dropdown-content label').forEach(label => {
+                const text = label.textContent.trim().toLowerCase();
+                label.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+
+        // Focus search automatically on mobile
+        document.getElementById('countyBtn').addEventListener('click', () => {
+            setTimeout(() => {
+                if (window.matchMedia("(max-width: 768px)").matches) {
+                    countySearch.focus();
+                }
+            }, 0);
+        });
+    }
+
+
+    // --- Mobile bottom sheet drag to resize panel ---
+    (function enableMobilePanelDrag(){
+        const handle = document.getElementById("mobilePanelHandle");
+        const panel  = document.getElementById("panel");
+        if (!handle || !panel) return;
+
+        let startY = 0;
+        let startH = 0;
+        let dragging = false;
+
+        function isMobile(){ return window.matchMedia("(max-width: 768px)").matches; }
+
+        function onDown(e){
+            if (!isMobile()) return;
+            dragging = true;
+            startY = (e.touches ? e.touches[0].clientY : e.clientY);
+            startH = panel.getBoundingClientRect().height;
+            document.body.style.userSelect = "none";
+        }
+
+        function onMove(e){
+            if (!dragging) return;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY);
+            const dy = y - startY;            // dragging down -> smaller
+            const newH = startH - dy;
+
+            const vh = window.innerHeight;
+            const minH = vh * 0.18;
+            const maxH = vh * 0.75;
+            const clamped = Math.max(minH, Math.min(maxH, newH));
+
+            panel.style.height = clamped + "px";
+            e.preventDefault();
+        }
+
+        function onUp(){
+            dragging = false;
+            document.body.style.userSelect = "";
+        }
+
+        handle.addEventListener("mousedown", onDown);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+
+        handle.addEventListener("touchstart", onDown, {passive:false});
+        window.addEventListener("touchmove", onMove, {passive:false});
+        window.addEventListener("touchend", onUp);
+    })();
+
+</script>
+
+</body>
+</html>
