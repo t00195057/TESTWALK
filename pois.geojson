@@ -25,5 +25,14 @@
 {  "type": "Feature",  "properties": {    "walkid": 26,     "type":  "Car Park",     "name":   "Car Park"  },  "geometry": {    "type": "Point",    "coordinates": [-10.048869, 52.20485]  }},
 {  "type": "Feature",  "properties": {    "walkid": 26,     "type":  "Lake",     "name":   "Lough Carun"  },  "geometry": {    "type": "Point",    "coordinates": [-10.052932, 52.206697]  }},
 {  "type": "Feature",  "properties": {    "walkid": 26,     "type":  "Woods",     "name":   "Glanteenassig Forest Park"  },  "geometry": {    "type": "Point",    "coordinates": [-10.051143, 52.207414]  }},
-{  "type": "Feature",  "properties": {    "walkid": 26,     "type":  "Lake",     "name":   "Louggh Slat"  },  "geometry": {    "type": "Point",    "coordinates": [-10.03366, 52.206245]  }}
+{  "type": "Feature",  "properties": {    "walkid": 26,     "type":  "Lake",     "name":   "Louggh Slat"  },  "geometry": {    "type": "Point",    "coordinates": [-10.03366, 52.206245]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Parking",     "name":   "Waterford Greenway Parking"  },  "geometry": {    "type": "Point",    "coordinates": [-7.180652, 52.254621]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Parking",     "name":   "Killoteran Greenway Car Park"  },  "geometry": {    "type": "Point",    "coordinates": [-7.205911, 52.244778]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Heratage Site",     "name":   "Mount Congrave Gardens"  },  "geometry": {    "type": "Point",    "coordinates": [-7.214595, 52.241971]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Bathroom",     "name":   "Bathroom "  },  "geometry": {    "type": "Point",    "coordinates": [-7.24678, 52.246969]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Parking",     "name":   "Waterford Suir Valley Railway"  },  "geometry": {    "type": "Point",    "coordinates": [-7.24596, 52.247333]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Bathroom",     "name":   "Bathroom "  },  "geometry": {    "type": "Point",    "coordinates": [-7.217919, 52.241044]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Bathroom",     "name":   "Bathroom "  },  "geometry": {    "type": "Point",    "coordinates": [-7.425184, 52.206058]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Parking",     "name":   "McGrath's Cross"  },  "geometry": {    "type": "Point",    "coordinates": [-7.46567, 52.189849]  }},
+{  "type": "Feature",  "properties": {    "walkid": 27,     "type":  "Parking",     "name":   "Waterford Greenway Parking"  },  "geometry": {    "type": "Point",    "coordinates": [-7.564632, 52.100219]  }}
 ]}
