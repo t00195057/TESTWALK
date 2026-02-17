@@ -286,6 +286,8 @@
             .dropdown.open .dropdown-content{
                 z-index: 9000001 !important;
             }
+            /* === [PARK-HOVER-CSS-01] === */
+            .mapboxgl-popup { pointer-events: none; }
 
             .slider{ width:100%; }
             .miniInput{ width:48px; height:26px; font-size:12px; padding:0 6px; }
@@ -315,17 +317,18 @@
 
             #mobilePanelHandle{
                 display:block;
-                position:sticky;
-                top:0;
-                z-index:5;
-                margin:0 0 8px 0;
-                padding:10px 12px;
+                height: 20px;
+                cursor: ns-resize;
             }
 
             #mobilePanelHandle::before{
                 content:"";
                 display:block;
-                width:44px;height:5px;border-radius:999px;background:#dfe7e5;margin:0 auto 8px;
+                width:44px;
+                height:5px;
+                border-radius:999px;
+                background:#dfe7e5;
+                margin:8px auto 0;
             }
 
             #panelToggleBtn{ display:none; }
@@ -377,6 +380,7 @@
                 <label><input type="radio" name="difficultyRadio" value="EASY"> Easy</label>
                 <label><input type="radio" name="difficultyRadio" value="MODERATE"> Moderate</label>
                 <label><input type="radio" name="difficultyRadio" value="HARD"> Hard</label>
+                <label><input type="radio" name="difficultyRadio" value="VERY HARD"> Very Hard</label>
             </div>
         </div>
 
@@ -427,6 +431,20 @@
         <button id="poiBtn" type="button" onclick="toggleDropdown('poiDropdown')">Points of Interest</button>
         <div class="dropdown-content">
             <label><input type="checkbox" value="__HAS_YT__"> Has a YouTube video</label>
+            <label><input type="checkbox" value="__IS_LOOP__"> Loop walks only</label>
+            <label><input type="checkbox" value="__GREENWAY__"> Greenways only</label>
+            <label><input type="checkbox" value="__PARKS__"> Parks only</label>
+            <div id="parkNamesWrap" style="display:none; margin-top:6px;">
+                <div style="font-weight:700;font-size:12px;margin-bottom:4px;">
+                    Select park:
+                </div>
+
+                <div id="parkNamesList"
+                     style="max-height:140px;overflow:auto;border:1px solid #eee;padding:6px;border-radius:6px;">
+                </div>
+            </div>
+
+
             <hr style="border:none;border-top:1px solid #eee;margin:6px 0;">
             <label><input type="checkbox" value="Bathroom"> Bathroom</label>
             <label><input type="checkbox" value="Cafe"> Cafe</label>
@@ -446,14 +464,30 @@
 
 <div id="appWrap">
     <div id="map"></div>
+    <!-- === [PARK-BACK-BTN-HTML-01] === -->
+    <button id="backToAllWalksBtn" type="button" style="
+  display:none;
+  position:absolute;
+  top:70px;
+  left:12px;
+  z-index:1000;
+  background:#fff;
+  border:1px solid #dcdcdc;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(0,0,0,.12);
+">
+        ← Back to all walks
+    </button>
 
     <!-- (5) toggle always accessible -->
     <button id="panelToggleBtn" type="button" onclick="togglePanel()">⤢ Full map</button>
 
     <div id="panel">
-        <button id="mobilePanelHandle" type="button" onclick="toggleMobilePanel()">
-            ⌄ Hide table
-        </button>
+        <div id="mobilePanelHandle" aria-label="Drag to resize panel"></div>
+
 
         <div id="walkTableContainer">
             <table id="walkTable">
@@ -519,6 +553,11 @@
 
     let mapLoaded = false;
     let selectedWalkId = null;
+    let lastListState = null; // saves filters before selecting a walk
+    let lastListView = null;  // saves center/zoom before selecting a walk
+    let selectedParkName = null;                 // drill-in state
+    let multiWalkParkNames = new Set();          // parks that have 2+ walks
+    let multiWalkParkWalkIds = new Set();        // walkids that belong to 2+ walk parks
 
     // (9) table sorting state
     const sortState = { key: "name", dir: "asc" };
@@ -589,6 +628,84 @@
             } catch (e) {}
         }
     }
+    // ===== PARK HELPERS =====
+    function norm(v){
+        return String(v ?? "").trim();
+    }
+    // === [PARK-BACK-BTN-JS-01] ===
+    function showBackToAllWalksBtn(show){
+        const btn = document.getElementById("backToAllWalksBtn");
+        if (!btn) return;
+        btn.style.display = show ? "block" : "none";
+    }
+    // === [PARK-BACK-FUNC-01] ===
+    function backToAllWalks() {
+        // Exit BOTH states
+        selectedWalkId = null;
+        selectedParkName = null;
+
+        // Restore panel UI to table (without changing filters)
+        document.getElementById('walkDetails').style.display = 'none';
+        document.getElementById('walkTableContainer').style.display = 'block';
+
+        // Hide selected-only layers
+        map.setFilter('poi-icons', ['==', 'walkid', -1]);
+        map.setFilter('walk-routes', ['==', 'walkid', -1]);
+
+        // Re-run normal filters now that selectedWalkId is cleared
+        applyAllFilters();
+
+        // Hide the back button now that we're out
+        showBackToAllWalksBtn(false);
+
+        // Zoom back out but keep filters as they are
+        if (lastListView) {
+            map.flyTo({ center: lastListView.center, zoom: lastListView.zoom, essential: true });
+        } else {
+            const v = getIrelandView();
+            map.flyTo({ center: v.center, zoom: v.zoom, essential: true });
+        }
+
+        // Mobile: restore handle
+        if (window.matchMedia("(max-width: 768px)").matches) {
+            document.getElementById('mobilePanelHandle').style.display = 'block';
+        }
+        resetMobilePanelHeight();
+    }
+
+
+    function isTrue(v){
+        return norm(v).toLowerCase() === "true" || norm(v) === "1";
+    }
+
+    function isNA(v){
+        const s = norm(v).toLowerCase();
+        return !s || s === "na";
+    }
+    // === [BOOL-FIX-01] ===
+    // parse TRUE/FALSE strings safely ("TRUE", "FALSE", "1", "0", etc.)
+    function tf(v){
+        const s = norm(v).toLowerCase();
+        return s === "true" || s === "1" || s === "yes";
+    }
+
+
+    // ===== FIX: ParkName field (walks.geojson uses ParkName)
+    function getWalkParkName(props){
+        return norm(
+            props.ParkName ??
+            props["ParkName"] ??
+            props["Park Name"] ??
+            props.park_name ??
+            props.park ??
+            "NA"
+        );
+    }
+
+
+    function getPoiParkName(props){
+        return norm(props["Park Name"] ?? props.park_name ?? props.park ?? props["Park name"] ?? "NA");
+    }
 
     function getIrelandView(){
         return window.matchMedia("(max-width: 768px)").matches ? IRELAND_VIEW_MOBILE : IRELAND_VIEW_DESKTOP;
@@ -610,7 +727,20 @@
         mapLoaded = true;
 
         map.addSource('walks', { type:'geojson', data:'walks.geojson' });
-        map.addSource('routes',{ type:'geojson', data:'routes.geojson' });
+        map.addSource("parks", { type:"geojson", data:{ type:"FeatureCollection", features:[] } });
+
+        map.addLayer({
+            id: "park-points",
+            type: "circle",
+            source: "parks",
+            paint: {
+                "circle-radius": 7,
+                "circle-color": "#1f7a6d",
+                "circle-stroke-width": 2,
+                "circle-stroke-color": "#ffffff"
+            }
+        });
+        map.addSource('routes',{ type:'geojson', data:'routes test.geojson' });
         map.addSource('pois',  { type:'geojson', data:'pois.geojson' });
 
         // (7) smaller walk markers
@@ -620,6 +750,20 @@
             source:'walks',
             paint:{ 'circle-radius':4, 'circle-color':'#007cbf' } // was 6
         });
+        map.on("click","park-points",(e)=>{
+
+            const f = e.features?.[0];
+
+            if (!f) return;
+
+            selectedParkName = String(
+                f.properties.parkName
+            ).trim();
+
+            applyAllFilters();
+
+        });
+
 
         // routes
         map.addLayer({
@@ -700,6 +844,79 @@
                 .setHTML(`<strong>${feature.properties.name}</strong>`)
                 .addTo(map);
         });
+        // === [PARK-HOVER-01] ===
+        // === [PARK-HOVER-02] ===
+// Robust hover popup: show on mousemove over parks, hide whenever not over parks.
+        const parkHoverPopup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            offset: 10
+        });
+
+        let parkHoverActive = false;
+
+        map.on("mousemove", (e) => {
+            const hits = map.queryRenderedFeatures(e.point, { layers: ["park-points"] });
+
+            if (!hits.length) {
+                if (parkHoverActive) {
+                    parkHoverPopup.remove();
+                    parkHoverActive = false;
+                    map.getCanvas().style.cursor = "";
+                }
+                return;
+            }
+
+            const f = hits[0];
+            parkHoverActive = true;
+            map.getCanvas().style.cursor = "pointer";
+            parkHoverPopup
+                .setLngLat(f.geometry.coordinates)
+                .setHTML(`<strong>${f.properties.parkName}</strong>`)
+                .addTo(map);
+        });
+
+// Extra safety: if the map is moved/zoomed, remove popup
+        map.on("movestart", () => {
+            parkHoverPopup.remove();
+            parkHoverActive = false;
+        });
+
+
+        map.on("mouseenter", "park-points", (e) => {
+            map.getCanvas().style.cursor = "pointer";
+            const f = e.features?.[0];
+            if (!f) return;
+            parkHoverPopup
+                .setLngLat(f.geometry.coordinates)
+                .setHTML(`<strong>${f.properties.parkName}</strong>`)
+                .addTo(map);
+        });
+
+        // === [PARK-CLICK-01] ===
+        map.on("click", "park-points", (e) => {
+            const f = e.features?.[0];
+            if (!f) return;
+
+            // save list view (so we can go back)
+            if (!selectedParkName && !selectedWalkId) {
+                const c = map.getCenter();
+                lastListView = { center: [c.lng, c.lat], zoom: map.getZoom() };
+            }
+
+            selectedParkName = String(f.properties.parkName).trim();
+
+            // apply park drill filters (shows only park walks + park POIs)
+            applyAllFilters();
+
+            // zoom into the park bounds (walk points in that park)
+            zoomToParkName(selectedParkName);
+
+            // show the back button
+            showBackToAllWalksBtn(true);
+        });
+
+
         map.on('mouseleave', 'walk-points', () => {
             map.getCanvas().style.cursor = '';
             hoverPopup.remove();
@@ -716,10 +933,24 @@
         // keep table in sync when map is idle (and on filter changes)
         map.on('idle', () => updateWalkTable());
         updateDropdownButtonLabels();
-        applyAllFilters(); // initial
+        // === [PARK-BUILD-FIX-01] ===
+// Wait until Mapbox has actual source features before building parks + UI
+        map.once("idle", () => {
+            rebuildParksSource();
+            buildParkNamesUI();
+            applyAllFilters();
+        });
+
+
+
         // set initial view based on device
         const v = getIrelandView();
         map.jumpTo({ center: v.center, zoom: v.zoom });
+
+        // === [PARK-BACK-BTN-JS-02] ===
+        document.getElementById("backToAllWalksBtn").addEventListener("click", () => {
+            backToAllWalks();
+        });
 
     });
     const inclineMinInput = document.getElementById('inclineMinInput');
@@ -815,7 +1046,9 @@
         if (!selectedTypes || selectedTypes.length === 0) return null;
 
         // Ignore the special YouTube filter here (handled separately)
-        const poiOnly = selectedTypes.filter(t => t !== "__HAS_YT__");
+        const SPECIAL = new Set(["__HAS_YT__", "__IS_LOOP__", "__GREENWAY__", "__PARKS__"]);
+        const poiOnly = selectedTypes.filter(t => !SPECIAL.has(t));
+
         if (poiOnly.length === 0) return null;
 
         const poiFeatures = map.querySourceFeatures('pois');
@@ -850,7 +1083,26 @@
             ["get","YouTube"],
             ""
         ]]];
+        // === [FILTER-FIX-01] ===
+// walks.geojson fields: ParkName / "Is Loop" / Greenway ("TRUE"/"FALSE")
+        const PARK_EXPR = ["downcase", ["to-string", ["coalesce",
+            ["get","ParkName"],
+            ["get","Park Name"],
+            ["get","park_name"],
+            ["get","park"],
+            "na"
+        ]]];
 
+// TRUE/FALSE are strings -> compare strings (not to-boolean)
+        const LOOP_TRUE_EXPR = ["==",
+            ["downcase", ["to-string", ["coalesce", ["get","Is Loop"], ["get","is_loop"], "false"]]],
+            "true"
+        ];
+
+        const GREEN_TRUE_EXPR = ["==",
+            ["downcase", ["to-string", ["coalesce", ["get","Greenway"], ["get","greenway"], "false"]]],
+            "true"
+        ];
 
         filter.push([">=", ["to-number", ["get", "incline"]], state.minIncline]);
         filter.push(["<=", ["to-number", ["get", "incline"]], state.maxIncline]);
@@ -859,8 +1111,13 @@
         filter.push(["<=", ["to-number", ["get", "length_km"]], state.maxLength]);
 
         if (state.Difficulty !== "all") {
-            filter.push(["==", ["get", "Difficulty"], state.Difficulty]);
+            filter.push([
+                "==",
+                ["downcase", ["to-string", ["get", "Difficulty"]]],
+                state.Difficulty.toLowerCase()
+            ]);
         }
+
 
         if (state.counties.length > 0) {
             const countiesLower = state.counties.map(c => String(c).trim().toLowerCase());
@@ -869,6 +1126,30 @@
         const wantsYouTube = state.poiTypes.includes("__HAS_YT__");
         if (wantsYouTube) {
             filter.push(["all", ["!=", YT_EXPR, ""], ["!=", YT_EXPR, "na"]]);
+        }
+        const wantsLoop = state.poiTypes.includes("__IS_LOOP__");
+        // === [FILTER-FIX-02] ===
+        if (wantsLoop) {
+            filter.push(LOOP_TRUE_EXPR);
+        }
+
+
+        const wantsGreenway = state.poiTypes.includes("__GREENWAY__");
+        // === [FILTER-FIX-03] ===
+        if (wantsGreenway) {
+            filter.push(GREEN_TRUE_EXPR);
+        }
+
+
+        const wantsParks = state.poiTypes.includes("__PARKS__");
+        if (wantsParks) {
+            filter.push(["all", ["!=", PARK_EXPR, ""], ["!=", PARK_EXPR, "na"]]);
+
+            // If specific park names are checked, filter to those too
+            const chosenParks = [...document.querySelectorAll('#parkNamesList input:checked')].map(cb => cb.value.toLowerCase());
+            if (chosenParks.length > 0) {
+                filter.push(["in", PARK_EXPR, ["literal", chosenParks]]);
+            }
         }
 
 
@@ -880,20 +1161,118 @@
         return filter;
     }
 
-    function applyAllFilters() {
+    function applyAllFilters(){
+
         if (!mapLoaded) return;
-        if (selectedWalkId) return; // when a walk is selected, we don't apply list filters to map
+
+        if (selectedWalkId) return;
 
         const state = getFilterState();
-        const filter = buildMapboxFilterFromState(state);
-        map.setFilter('walk-points', filter);
 
-        // keep routes hidden in list view
-        map.setFilter('walk-routes', ['==', 'walkid', -1]);
+        const baseFilter = buildMapboxFilterFromState(state);
 
-        updateDropdownButtonLabels();
+
+        // ===== PARK DRILL MODE =====
+
+        if (selectedParkName){
+
+            const parkLower = selectedParkName.toLowerCase();
+
+            // === [DRILL-FIX-02] ===
+            const PARK_EXPR = [
+                "downcase",
+                ["to-string",
+                    ["coalesce",
+                        ["get","ParkName"],
+                        ["get","Park Name"],
+                        ["get","park_name"],
+                        ["get","park"],
+                        "NA"
+                    ]
+                ]
+            ];
+
+
+            map.setFilter("walk-points",[
+                "all",
+                baseFilter,
+                ["==", PARK_EXPR, parkLower]
+            ]);
+
+            map.setLayoutProperty(
+                "park-points",
+                "visibility",
+                "none"
+            );
+
+            // === [DRILL-FIX-03] ===
+            const POI_PARK_EXPR = [
+                "downcase",
+                ["to-string",
+                    ["coalesce",
+                        ["get","ParkName"],
+                        ["get","Park Name"],
+                        ["get","park_name"],
+                        ["get","park"],
+                        "NA"
+                    ]
+                ]
+            ];
+
+
+            map.setFilter("poi-icons",[
+                "==",
+                POI_PARK_EXPR,
+                parkLower
+            ]);
+
+            updateWalkTable();
+
+            zoomToSelectedParkIfNeeded();
+
+            return;
+        }
+
+
+        // ===== NORMAL LIST MODE =====
+
+        const hideParkWalksExpr = [
+            "!",
+            ["in",
+                ["to-number", ["get","walkid"]],
+                ["literal", [...multiWalkParkWalkIds]]
+            ]
+        ];
+
+        map.setFilter("walk-points",[
+            "all",
+            baseFilter,
+            hideParkWalksExpr
+        ]);
+
+
+        map.setLayoutProperty(
+            "park-points",
+            "visibility",
+            "visible"
+        );
+
+        map.setFilter("walk-routes",[
+            "==",
+            "walkid",
+            -1
+        ]);
+
+        map.setFilter("poi-icons",[
+            "==",
+            "walkid",
+            -1
+        ]);
+
         updateWalkTable();
+
     }
+
 
     // (8) Table uses same state as map (even if not relying on map filters)
     function getFilteredWalkFeatures() {
@@ -940,6 +1319,47 @@
                 const yt = String(ytRaw).trim().toLowerCase();
                 if (!yt || yt === "na") continue;
 
+            }
+// --- Loop / Greenway / Park filters (table side) ---
+            const wantsLoop = state.poiTypes.includes("__IS_LOOP__");
+            const wantsGreenway = state.poiTypes.includes("__GREENWAY__");
+            const wantsParks = state.poiTypes.includes("__PARKS__");
+
+            // === [TABLE-FIX-01] ===
+// table must match walks.geojson schema: ParkName + TRUE/FALSE strings
+            const parkRaw =
+                f.properties.ParkName ??
+                f.properties["ParkName"] ??
+                f.properties["Park Name"] ??
+                f.properties.park_name ??
+                f.properties.park ??
+                "na";
+            const park = String(parkRaw).trim().toLowerCase();
+
+            const greenRaw =
+                f.properties.Greenway ??
+                f.properties["Greenway"] ??
+                f.properties.greenway ??
+                "false";
+            const greenIsTrue = tf(greenRaw);
+
+            const loopRaw =
+                f.properties["Is Loop"] ??
+                f.properties.is_loop ??
+                "false";
+            const isLoop = tf(loopRaw);
+
+            if (wantsLoop && !isLoop) continue;
+
+            // === [TABLE-FIX-02] ===
+            if (wantsGreenway && !greenIsTrue) continue;
+
+
+            if (wantsParks) {
+                if (!park || park === "na") continue;
+
+                const chosenParks = [...document.querySelectorAll('#parkNamesList input:checked')].map(cb => cb.value.toLowerCase());
+                if (chosenParks.length > 0 && !chosenParks.includes(park)) continue;
             }
 
             out.push(f);
@@ -1097,8 +1517,17 @@
         ]);
     }
     function selectWalkById(walkId) {
+        // === [PARK-BACK-BTN-JS-03] ===
+
+
         const feature = getWalkFeatureById(walkId);
         if (!feature) return;
+// save current list filters + map view so we can restore on "Back to all walks"
+        if (!selectedWalkId) {
+            lastListState = getFilterState();
+            const c = map.getCenter();
+            lastListView = { center: [c.lng, c.lat], zoom: map.getZoom() };
+        }
 
         const props = feature.properties;
         selectedWalkId = Number(props.walkid);
@@ -1158,6 +1587,37 @@
 
 
         zoomToRoute(selectedWalkId);
+        // === [PARK-BACK-BTN-JS-03] ===
+        showBackToAllWalksBtn(true);
+
+    }
+    function zoomToSelectedParkIfNeeded(){
+        if (!mapLoaded || selectedWalkId) return;
+
+        const parkName = getSelectedParkName();
+        if (!parkName) return;
+
+        const feats = map.querySourceFeatures("walks");
+        const bounds = new mapboxgl.LngLatBounds();
+        let found = false;
+
+        feats.forEach(f => {
+            // === [PARK-UI-FIX-01] ===
+            const p =
+                f.properties.ParkName ??
+                f.properties["ParkName"] ??
+                f.properties["Park Name"] ??
+                f.properties.park_name ??
+                f.properties.park ??
+                "na";
+
+            if (String(p).trim() !== parkName) return;
+            if (f.geometry?.type !== "Point") return;
+            bounds.extend(f.geometry.coordinates);
+            found = true;
+        });
+
+        if (found) map.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 650 });
     }
 
 
@@ -1217,7 +1677,15 @@
 
     /* RESET */
     function resetSelection() {
+        // === [PARK-BACK-BTN-JS-04] ===
+        if (selectedParkName) showBackToAllWalksBtn(true);
+        else showBackToAllWalksBtn(false);
+        selectedParkName = null;
         selectedWalkId = null;
+// restore previous map view if we have it
+        if (lastListView) {
+            map.jumpTo({ center: lastListView.center, zoom: lastListView.zoom });
+        }
 
         // restore list view filters
         document.getElementById('walkDetails').style.display='none';
@@ -1229,23 +1697,14 @@
             document.getElementById('mobilePanelHandle').style.display = 'block';
         }
         resetMobilePanelHeight();
-        document.getElementById('appWrap').classList.remove('mobile-panel-collapsed'); // ensure not stuck collapsed
-        document.getElementById('mobilePanelHandle').textContent = "⌄ Hide table";
-        applyAllFilters();
-        map.flyTo({ center:[-8.2,53.4], zoom:6.5 });
-    }
-    function toggleMobilePanel(){
-        const wrap = document.getElementById('appWrap');
-        const btn = document.getElementById('mobilePanelHandle');
+       applyAllFilters();
+        if (lastListView) {
+            map.jumpTo({ center: lastListView.center, zoom: lastListView.zoom });
+        } else {
+            const v = getIrelandView();
+            map.jumpTo({ center: v.center, zoom: v.zoom });
+        }
 
-        // IMPORTANT: clear any dragged inline height first
-        resetMobilePanelHeight();
-
-        wrap.classList.toggle('mobile-panel-collapsed');
-        const collapsed = wrap.classList.contains('mobile-panel-collapsed');
-        btn.textContent = collapsed ? "⌃ Show table" : "⌄ Hide table";
-
-        setTimeout(() => map.resize(), 50);
     }
 
 
@@ -1365,6 +1824,9 @@
 
     // (1) POI AND logic also drives filtering (and selected-walk POIs)
     document.querySelectorAll('#poiDropdown input').forEach(cb => cb.onchange = () => {
+        const parksOn = document.querySelector('#poiDropdown input[value="__PARKS__"]')?.checked;
+        const parkWrap = document.getElementById("parkNamesWrap");
+        if (parkWrap) parkWrap.style.display = parksOn ? "block" : "none";
         updateDropdownButtonLabels();
         if (selectedWalkId) applyPOIFilterForSelectedWalk();
         else applyAllFilters();
@@ -1484,6 +1946,138 @@
         }
 
         map.fitBounds(bounds, { padding: 60, maxZoom: 10, duration: 700 });
+    }
+    // === [PARK-ZOOM-01] ===
+    function zoomToParkName(parkName){
+        if (!mapLoaded || !parkName) return;
+
+        const parkLower = String(parkName).trim().toLowerCase();
+        const feats = map.querySourceFeatures("walks");
+
+        const bounds = new mapboxgl.LngLatBounds();
+        let found = false;
+
+        for (const f of feats){
+            if (f.geometry?.type !== "Point") continue;
+
+            const p = getWalkParkName(f.properties).toLowerCase();
+            if (p !== parkLower) continue;
+
+            bounds.extend(f.geometry.coordinates);
+            found = true;
+        }
+
+        if (found) map.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 650 });
+    }
+
+    function rebuildParksSource(){
+
+        if (!mapLoaded) return;
+
+        multiWalkParkNames = new Set();
+        multiWalkParkWalkIds = new Set();
+
+        const feats = map.querySourceFeatures("walks");
+
+        const grouped = new Map();
+
+        for (const f of feats){
+
+            if (f.geometry?.type !== "Point") continue;
+
+            const parkName = getWalkParkName(f.properties);
+
+            if (isNA(parkName)) continue;
+
+            if (!grouped.has(parkName)){
+                grouped.set(parkName,{
+                    firstCoord: f.geometry.coordinates,
+                    walkIds: []
+                });
+            }
+
+            grouped.get(parkName).walkIds.push(
+                Number(f.properties.walkid)
+            );
+        }
+
+        const parkFeatures = [];
+
+        grouped.forEach((group, parkName)=>{
+
+            if (group.walkIds.length < 2) return;
+
+            multiWalkParkNames.add(parkName);
+
+            group.walkIds.forEach(id=>{
+                multiWalkParkWalkIds.add(id);
+            });
+
+            parkFeatures.push({
+                type:"Feature",
+                geometry:{
+                    type:"Point",
+                    coordinates: group.firstCoord
+                },
+                properties:{
+                    parkName,
+                    count: group.walkIds.length
+                }
+            });
+
+        });
+
+        map.getSource("parks").setData({
+            type:"FeatureCollection",
+            features: parkFeatures
+        });
+
+    }
+
+
+    function buildParkNamesUI(){
+        const wrap = document.getElementById("parkNamesWrap");
+        const list = document.getElementById("parkNamesList");
+        if (!wrap || !list || !mapLoaded) return;
+
+        list.innerHTML = "";
+
+        // collect parks from walks source
+        const feats = map.querySourceFeatures("walks");
+        const parks = new Set();
+
+        feats.forEach(f => {
+            // === [PARK-UI-FIX-01] ===
+            const p =
+                f.properties.ParkName ??
+                f.properties["ParkName"] ??
+                f.properties["Park Name"] ??
+                f.properties.park_name ??
+                f.properties.park ??
+                "na";
+
+            const s = String(p).trim();
+            if (s && s.toLowerCase() !== "na") parks.add(s);
+        });
+
+        [...parks].sort((a,b)=>a.localeCompare(b)).forEach(p => {
+            const id = "park_" + p.replace(/\W+/g,"_");
+            const label = document.createElement("label");
+            label.style.display = "flex";
+            label.style.alignItems = "center";
+            label.style.gap = "8px";
+            label.innerHTML = `<input type="checkbox" value="${p}"> ${p}`;
+            list.appendChild(label);
+
+            label.querySelector("input").addEventListener("change", () => {
+                applyAllFilters();
+                zoomToSelectedParkIfNeeded();
+            });
+        });
+    }
+    function getSelectedParkName(){
+        const chosen = [...document.querySelectorAll('#parkNamesList input:checked')].map(cb => cb.value);
+        return chosen.length === 1 ? chosen[0] : null;
     }
 
 
