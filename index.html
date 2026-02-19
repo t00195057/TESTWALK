@@ -11,11 +11,12 @@
 
     <style>
         :root{
-            --primary:#1f7a6d;
             --secondary:#2c3e50;
             --bg-light:#f7f9fb;
             --border:#dcdcdc;
             --text-dark:#2b2b2b;
+            --brandGreen: rgb(73,153,0);
+            --primary: rgb(73,153,0);
         }
         *{box-sizing:border-box}
         body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;color:var(--text-dark);background:var(--bg-light)}
@@ -23,8 +24,16 @@
         .thTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
 
         .sortHandle{
-            font-size:11px;opacity:.8;padding:4px 6px;border-radius:8px;
-            border:1px solid #e3ece9;background:#fff;cursor:pointer;user-select:none;
+            font-size:12px;
+            font-weight:900;
+            color:#1f3342;           /* force visible */
+            opacity:1;               /* remove fade */
+            padding:4px 6px;
+            border-radius:8px;
+            border:1px solid #e3ece9;
+            background:#fff;
+            cursor:pointer;
+            user-select:none;
         }
 
         #clearFiltersBtn{
@@ -39,6 +48,13 @@
             background:#fff;color:var(--secondary);font-weight:900;cursor:pointer;
             box-shadow:0 2px 10px rgba(0,0,0,0.06);
         }
+        /* === [LOGO-01] === */
+        #logoImg{
+            height:80px;
+            width:auto;
+            object-fit:contain;
+            display:block;
+        }
 
         .thSearch{
             display:none;margin-top:6px;width:100%;height:28px;border:1px solid var(--border);
@@ -48,7 +64,8 @@
 
         /* Top filters bar (desktop default) */
         #filters{
-            background: linear-gradient(180deg, #ffffff, #fbfcfd);
+            background: var(--brandGreen);
+            border-bottom:1px solid var(--border);
             display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);
         }
         #filters label{ color:#1f3342;letter-spacing:.2px;font-size:13px;font-weight:600;white-space:nowrap; }
@@ -57,6 +74,18 @@
             display:flex;flex-direction:column;gap:6px;padding:6px 10px;border:1px solid #eef2f5;
             background:#ffffff;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,0.03);
         }
+        /* === [SOCIAL-02] === */
+        #socialBar{
+            flex:0 0 auto;
+            display:flex;
+            gap:12px;
+            justify-content:center;
+            align-items:center;
+            padding:14px 0 4px;
+            border-top:1px solid var(--border);
+            margin-top:10px;
+        }
+        #socialBar img{ width:28px; height:28px; object-fit:contain; }
 
         .rangeRow{display:flex;align-items:center;gap:8px}
         .slider{width:160px}
@@ -79,7 +108,11 @@
         .noUi-handle:before,.noUi-handle:after{display:none}
 
         /* Table header tint */
-        #walkTable th{background:#f6faf9;border-bottom:1px solid #e7eeec}
+        #walkTable th{
+            background: var(--brandGreen);
+            color:#fff;
+            border-bottom:1px solid rgba(255,255,255,0.25);
+        }
 
         /* Mobile filters toggle button (shown only on mobile) */
         #mobileFiltersToggle{
@@ -95,12 +128,6 @@
             overflow-x:auto;overflow-y:visible;
         }
 
-        /* Logo */
-        #logoPlaceholder{
-            width:120px;height:46px;border-radius:12px;background:#e9eef3;color:#2c3e50;
-            display:flex;align-items:center;justify-content:center;font-weight:900;letter-spacing:1px;
-            flex:0 0 auto;
-        }
 
         /* DROPDOWNS */
         .dropdown{ position:relative; z-index:11000; }
@@ -151,20 +178,50 @@
             position:relative;width:100%;height:calc(100vh - 70px);
             display:flex;z-index:1;
         }
-        #map{width:70%;height:100%;position:relative;z-index:1}
+        /* Panel LEFT */
         #panel{
-            width:30%;height:100%;padding:20px;background:#fff;border-left:1px solid var(--border);
-            overflow-y:auto;position:relative;transition:width .2s ease;
+            width:35%;
+            height:100%;
+            padding:0px;
+            background:#fff;
+            border-right:1px solid var(--border);  /* ✅ changed */
+            overflow:hidden;
+            position:relative;
+            transition:width .2s ease;
+            display:flex;
+            flex-direction:column;
         }
+
+        /* Map RIGHT */
+        #map{
+            width:70%;
+            height:100%;
+            position:relative;
+            z-index:1;
+        }
+        #appWrap.panel-collapsed #panelToggleBtn{
+            left: 18px;               /* ✅ when full map, tuck to left edge */
+        }
+
 
         #appWrap.panel-collapsed #panel{display:none}
         #appWrap.panel-collapsed #map{width:100%}
 
         #panelToggleBtn{
-            position:absolute;top:12px;right:12px;z-index:60;background:var(--primary);color:#fff;
-            border:none;border-radius:10px;padding:10px 12px;font-weight:800;cursor:pointer;
+            position:absolute;
+            top:12px;
+            left: calc(33% + 12px);   /* ✅ sits just inside the map, beside the panel */
+            z-index:60;
+            background:var(--primary);
+            color:#fff;
+            border:none;
+            border-radius:10px;
+            padding:10px 12px;
+            font-weight:800;
+            cursor:pointer;
             box-shadow:0 8px 18px rgba(0,0,0,.18);
         }
+
         #panelToggleBtn:hover{filter:brightness(.95)}
 
         .actionRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:12px 0 14px}
@@ -178,19 +235,54 @@
         .actionBtn.primary:hover{filter:brightness(.96)}
         .actionBtn.secondary{background:#fff;color:var(--secondary);border-color:#dfe7e5}
         .actionBtn.secondary:hover{background:#f6faf9}
-
-        #walkDetails h2{margin-top:0;color:var(--primary)}
-        #walk-info{background:var(--bg-light);padding:10px;border-radius:8px;font-size:14px;margin-bottom:12px}
+        #walkDetails{ padding:20px;
+            border:2px solid var(--brandGreen);
+            border-radius:16px;
+            margin:12px;
+            background:#fff;
+            box-shadow:0 6px 18px rgba(0,0,0,0.08);}
+        #walkDetails h2{ margin-top:0; color:var(--primary); padding:0; }
+        #walk-info{background:var(--bg-light);padding:10px;border-radius:8px;font-size:14px;border:1px solid rgba(73,153,0,0.25);margin-bottom:12px}
         iframe{width:100%;height:240px;border-radius:10px;margin-bottom:12px;border:0}
 
         /* TABLE */
-        #walkTable{width:100%;border-collapse:collapse;font-size:13px}
-        #walkTable th,#walkTable td{padding:8px;border-bottom:1px solid var(--border);vertical-align:middle}
+        #walkTable{width:100%;border-collapse:collapse;font-size:12px;margin:0; }
+        #walkTable th,#walkTable td{padding:8px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
         #walkTable tr{cursor:pointer}
-        #walkTable tr:hover{background:var(--bg-light)}
-        #walkTable th{user-select:none;cursor:pointer;position:sticky;top:0;background:#fff;z-index:1}
-        .th-sort-indicator{font-size:11px;opacity:.75;margin-left:6px}
+        #walkTable td:nth-child(1){ /* Name */
+            max-width: 38vw;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #backToAllWalksBtn{
+            position:absolute;
+            top:58px;              /* just below Full map */
+            left: calc(33% + 12px);
+            z-index:60;
+            background:#fff;
+            color:var(--secondary);
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:10px 12px;
+            font-weight:800;
+            cursor:pointer;
+            box-shadow:0 8px 18px rgba(0,0,0,.12);
+        }
+        #appWrap.panel-collapsed #backToAllWalksBtn{ left:18px; }
+        #backToAllWalksBtn:hover{ background: var(--bg-light); }
 
+        @media (max-width: 768px){
+            #backToAllWalksBtn{
+                left:12px;
+                top:58px;
+            }
+        }
+
+        #walkTable tr:hover{background:var(--bg-light)}
+        #walkTable th{user-select:none;cursor:pointer;position:sticky;top:0;font-size:12px;z-index:1}
+        .th-sort-indicator{font-size:11px;opacity:.75;margin-left:6px}
+        #walkTableContainer{ flex:1; overflow:auto; }
         .dir-btn{
             background:#fff;border:1px solid var(--border);color:var(--secondary);
             padding:6px 10px;border-radius:8px;font-weight:700;
@@ -214,7 +306,7 @@
             #filters{
                 display:flex;align-items:center;justify-content:space-between;gap:12px;
                 position: sticky;top: 0;z-index: 4000000;
-                padding: 10px 12px;height:auto;background: linear-gradient(180deg, #ffffff, #fbfcfd);
+                padding: 10px 12px;height:auto;background: var(--brandGreen);
             }
 
             /* Show filters button on mobile */
@@ -223,6 +315,7 @@
                 align-items:center;gap:8px;
                 margin-left:auto;
                 pointer-events:auto;
+                border-color: rgba(255,255,255,0.35);
             }
 
             /* Base: hide inner until modal open */
@@ -255,7 +348,7 @@
                 width: min(92vw, 520px);
                 max-height: 70vh;
                 overflow: auto;
-                background: #fff;
+                background:#fff;
                 border: 1px solid #e6ecea;
                 border-radius: 16px;
                 padding: 14px;
@@ -293,8 +386,30 @@
             .miniInput{ width:48px; height:26px; font-size:12px; padding:0 6px; }
 
             /* App layout mobile */
-            #appWrap{flex-direction: column;height: calc(100vh - 60px);}
+            #appWrap{flex-direction: column-reverse; height: calc(100vh - 60px);}
             #map{width:100%;height:60vh;}
+            .walkInfoTable{
+                width:100%;
+                border-collapse:collapse;
+                font-size:14px;
+            }
+            .walkInfoTable th{
+                text-align:left;
+                padding:8px 10px;
+                width:40%;
+                border-bottom:1px solid rgba(0,0,0,0.08);
+                color:var(--secondary);
+            }
+            .walkInfoTable td{
+                padding:8px 10px;
+                border-bottom:1px solid rgba(0,0,0,0.08);
+            }
+            .walkInfoTable tr:last-child th,
+            .walkInfoTable tr:last-child td{ border-bottom:none; }
+            .walkInfoTable tr.highlightRow th,
+            .walkInfoTable tr.highlightRow td{
+                background: rgba(73,153,0,0.10);
+            }
 
             /* Bottom sheet / panel */
             #panel{
@@ -307,18 +422,28 @@
                 padding: 10px 14px 14px;
                 overflow:hidden;
                 position:relative;
-                touch-action:none;
+                touch-action:pan-y;
+            }
+            #logoImg{
+                height:40px;      /* was 80 */
+                max-width:42vw;
             }
 
             #walkTableContainer, #walkDetails{
                 height: calc(100% - 52px);
                 overflow:auto;
             }
+            #walkTable{ font-size:11px; }
+            #walkTable th,#walkTable td{ padding:7px 5px; }
+            .dir-btn{ padding:5px 8px; font-size:11px; }
 
             #mobilePanelHandle{
-                display:block;
-                height: 20px;
-                cursor: ns-resize;
+                background:transparent !important;
+                border:none !important;
+                box-shadow:none !important;
+                padding:0 !important;
+                margin:10px 12px 6px;
+                touch-action: none;
             }
 
             #mobilePanelHandle::before{
@@ -338,6 +463,9 @@
             #appWrap.mobile-panel-collapsed #panel{ height:auto; padding:10px 14px; }
             #appWrap.mobile-panel-collapsed #map{ height: calc(100vh - 60px - 62px); }
         }
+        /*may have to remove for licancing*/
+        .mapboxgl-ctrl-logo{ display:none !important; }
+        .mapboxgl-ctrl-attrib{ display:none !important; }
     </style>
 
 </head>
@@ -345,7 +473,7 @@
 <body>
 
 <div id="filters">
-    <div id="logoPlaceholder" aria-label="Siuloid logo placeholder">Siúlóid</div>
+    <img id="logoImg" src="icons/logo.png" alt="Logo">
     <button id="mobileFiltersToggle" type="button" aria-expanded="false" onclick="toggleMobileFilters()">
         ☰ Filters
     </button>
@@ -358,7 +486,7 @@
             <div class="rangeRow">
                 <input id="inclineMinInput" class="miniInput" inputmode="numeric" value="0">
                 <div id="inclineSlider" class="slider"></div>
-                <input id="inclineMaxInput" class="miniInput" inputmode="numeric" value="1500">
+                <input id="inclineMaxInput" class="miniInput" inputmode="numeric" value="5000">
             </div>
         </div>
 
@@ -368,7 +496,7 @@
             <div class="rangeRow">
                 <input id="lengthMinInput" class="miniInput" inputmode="numeric" value="0">
                 <div id="lengthSlider" class="slider"></div>
-                <input id="lengthMaxInput" class="miniInput" inputmode="numeric" value="30">
+                <input id="lengthMaxInput" class="miniInput" inputmode="numeric" value="200">
             </div>
         </div>
 
@@ -449,11 +577,15 @@
             <label><input type="checkbox" value="Bathroom"> Bathroom</label>
             <label><input type="checkbox" value="Cafe"> Cafe</label>
             <label><input type="checkbox" value="Car Park"> Car Park</label>
-            <label><input type="checkbox" value="Castle"> Castle</label>
-            <label><input type="checkbox" value="Church"> Church</label>
+            <label><input type="checkbox" value="Mountain"> Mountain</label>
             <label><input type="checkbox" value="Lake"> Lake</label>
             <label><input type="checkbox" value="River"> River</label>
             <label><input type="checkbox" value="Woods"> Woods</label>
+            <label><input type="checkbox" value="Beach"> Beach</label>
+            <label><input type="checkbox" value="Castle"> Castle</label>
+            <label><input type="checkbox" value="Church"> Church</label>
+            <label><input type="checkbox" value="Heritage"> Heritage Site</label>
+
         </div>
     </div>
         <button id="clearFiltersBtn" type="button" onclick="clearAllFilters()">Clear filters</button>
@@ -463,31 +595,10 @@
 <div id="filtersBackdrop" onclick="toggleMobileFilters(false)"></div>
 
 <div id="appWrap">
-    <div id="map"></div>
-    <!-- === [PARK-BACK-BTN-HTML-01] === -->
-    <button id="backToAllWalksBtn" type="button" style="
-  display:none;
-  position:absolute;
-  top:70px;
-  left:12px;
-  z-index:1000;
-  background:#fff;
-  border:1px solid #dcdcdc;
-  border-radius:12px;
-  padding:10px 12px;
-  font-weight:900;
-  cursor:pointer;
-  box-shadow:0 8px 18px rgba(0,0,0,.12);
-">
-        ← Back to all walks
-    </button>
 
-    <!-- (5) toggle always accessible -->
-    <button id="panelToggleBtn" type="button" onclick="togglePanel()">⤢ Full map</button>
-
+    <!-- LEFT: Panel -->
     <div id="panel">
         <div id="mobilePanelHandle" aria-label="Drag to resize panel"></div>
-
 
         <div id="walkTableContainer">
             <table id="walkTable">
@@ -507,6 +618,15 @@
                             <span class="sortHandle" data-sort="length_km" id="sort-length_km"></span>
                         </div>
                         <input class="thSearch" data-col="length_km" placeholder="Search length…" />
+                    </th>
+
+                    <!-- ✅ NEW Incline column -->
+                    <th data-col="incline">
+                        <div class="thTop">
+                            <span>Incline (m)</span>
+                            <span class="sortHandle" data-sort="incline" id="sort-incline"></span>
+                        </div>
+                        <input class="thSearch" data-col="incline" placeholder="Search incline…" />
                     </th>
 
                     <th data-col="Difficulty">
@@ -529,17 +649,36 @@
             <h2 id="walk-name"></h2>
             <p id="walk-info"></p>
 
-            <!-- (2) directions button for selected walk -->
             <div class="actionRow">
                 <button class="actionBtn primary" type="button" onclick="openDirectionsForSelected()">📍 Get directions</button>
                 <button class="actionBtn secondary" type="button" onclick="resetSelection()">← Back to all walks</button>
             </div>
 
-
             <iframe id="video" allowfullscreen></iframe>
         </div>
+        <!-- === [SOCIAL-01] === -->
+        <div id="socialBar">
+            <a href="https://www.youtube.com" target="_blank" rel="noopener"><img src="icons/youtube.png" alt="YouTube"></a>
+            <a href="https://www.instagram.com/siuloid/" target="_blank" rel="noopener"><img src="icons/instagram.png" alt="Instagram"></a>
+            <a href="https://www.facebook.com/profile.php?id=61588399491851" target="_blank" rel="noopener"><img src="icons/facebook.png" alt="Facebook"></a>
+            <a href="https://www.tiktok.com" target="_blank" rel="noopener"><img src="icons/tiktok.png" alt="TikTok"></a>
+        </div>
+
     </div>
+
+    <!-- RIGHT: Map -->
+    <div id="map"></div>
+
+    <!-- overlays stay inside appWrap so they float above the map -->
+
+
+    <button id="panelToggleBtn" type="button" onclick="togglePanel()">⤢ Full map</button>
+    <button id="backToAllWalksBtn" type="button" onclick="backToAllWalks()" style="display:none;">
+        ← Back to all walks
+    </button>
+
 </div>
+
 
 <script>
     // MOBILE: ensure filters start closed
@@ -556,17 +695,27 @@
     let lastListState = null; // saves filters before selecting a walk
     let lastListView = null;  // saves center/zoom before selecting a walk
     let selectedParkName = null;                 // drill-in state
+    // === [PARK-MULTI-ROUTES-01] ===
+    let parkWalkIds = [];              // walkids currently in selected park
+    let hoveredRouteId = null;         // for hover highlight
+    let routeHoverPopup = null;        // popup for hovered route
     let multiWalkParkNames = new Set();          // parks that have 2+ walks
     let multiWalkParkWalkIds = new Set();        // walkids that belong to 2+ walk parks
 
     // (9) table sorting state
     const sortState = { key: "name", dir: "asc" };
+    document.addEventListener("DOMContentLoaded", () => {
+        setSortIndicators();
+    });
 
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [-8.2, 53.4],
-        zoom: 6.5
+        zoom: 5.2,
+        minZoom: 4.0,
+        maxZoom: 16,
+        maxBounds:  [[-13.5, 50.3], [-3.5, 56.6]]
     });
 
     function pickNearestWalkFeature(e, radiusPx = 18) {
@@ -672,6 +821,67 @@
         }
         resetMobilePanelHeight();
     }
+    // === [PARK-MULTI-ROUTES-02] ===
+    function getParkWalkIdsByName(parkName){
+        if (!mapLoaded || !parkName) return [];
+        const parkLower = String(parkName).trim().toLowerCase();
+
+        const feats = map.querySourceFeatures("walks");
+        const ids = new Set();
+
+        for (const f of feats){
+            const p = getWalkParkName(f.properties).toLowerCase();
+            if (p === parkLower) ids.add(Number(f.properties.walkid));
+        }
+        return [...ids];
+    }
+
+    // === [PARK-MULTI-ROUTES-03] ===
+    function getWalkNameById(walkId){
+        const f = getWalkFeatureById(walkId);
+        return f ? String(f.properties.name || `Walk ${walkId}`) : `Walk ${walkId}`;
+    }
+
+    // === [PARK-MULTI-ROUTES-04] ===
+    function setRoutesMultiColour(ids){
+        // palette (repeatable, readable)
+        const palette = [
+            "#e6194b","#3cb44b","#ffe119","#4363d8","#f58231",
+            "#911eb4","#46f0f0","#f032e6","#bcf60c","#fabebe",
+            "#008080","#e6beff","#9a6324","#fffac8","#800000",
+            "#aaffc3","#808000","#ffd8b1","#000075","#808080"
+        ];
+
+        // match expr: walkid -> color
+        const expr = ["match", ["to-number", ["get","walkid"]]];
+        ids.forEach((id, i) => {
+            expr.push(Number(id));
+            expr.push(palette[i % palette.length]);
+        });
+        expr.push("#d7191c"); // fallback
+
+        // Use feature-state to highlight hovered one
+        map.setPaintProperty("walk-routes", "line-color", [
+            "case",
+            ["boolean", ["feature-state","hover"], false],
+            "#ffffff",
+            expr
+        ]);
+
+        map.setPaintProperty("walk-routes", "line-width", [
+            "case",
+            ["boolean", ["feature-state","hover"], false],
+            6,
+            3
+        ]);
+
+        map.setPaintProperty("walk-routes", "line-opacity", [
+            "case",
+            ["boolean", ["feature-state","hover"], false],
+            1,
+            0.9
+        ]);
+    }
 
 
     function isTrue(v){
@@ -750,18 +960,18 @@
             source:'walks',
             paint:{ 'circle-radius':4, 'circle-color':'#007cbf' } // was 6
         });
-        map.on("click","park-points",(e)=>{
 
-            const f = e.features?.[0];
-
-            if (!f) return;
-
-            selectedParkName = String(
-                f.properties.parkName
-            ).trim();
-
-            applyAllFilters();
-
+// === [MOBILE-TAP-01] ===
+        map.on("touchstart", () => {
+            const filtersOpen = document.getElementById("filters").classList.contains("mobile-open");
+            if (filtersOpen) toggleMobileFilters(false);
+        });
+// === [MOBILE-TAP-02] ===
+        map.on("touchstart", "walk-points", (e) => {
+            const feature = pickNearestWalkFeature(e, 28);
+            if (!feature) return;
+            selectWalkById(feature.properties.walkid);
+            e.preventDefault();
         });
 
 
@@ -773,6 +983,40 @@
             paint:{ 'line-width':3, 'line-color':'#d7191c' } // slightly slimmer
         });
 
+        map.addLayer({
+            id: "walk-routes-hover",
+            type: "line",
+            source: "routes",
+            filter: ["==", ["to-number", ["get","walkid"]], -1],
+            paint: {
+                "line-width": 7,
+                "line-color": "#ffffff"
+            }
+        });
+        const routePopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false });
+
+        function clearRouteHover(){
+            map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+            routePopup.remove();
+        }
+
+        map.on("mousemove", "walk-routes", (e) => {
+
+            const wid = Number(e.features[0].properties.walkid);
+
+            map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], wid]);
+
+            routePopup
+                .setLngLat(e.lngLat)
+                .setHTML(`<strong>${getWalkNameById(wid)}</strong>`)
+                .addTo(map);
+
+        });
+
+        map.on("mouseleave", "walk-routes", clearRouteHover);
+
+
+
         // POI icons
         const poiIcons = {
             Bathroom: 'bathroom',
@@ -782,7 +1026,10 @@
             Church: 'church',
             Lake: 'lake',
             River: 'river',
-            Woods: 'woods'
+            Woods: 'woods',
+            Beach: 'beach',
+            Mountain: 'mountain',
+            Heritage: 'heritage'
         };
 
         Object.entries(poiIcons).forEach(([type, name]) => {
@@ -796,6 +1043,7 @@
             id: 'poi-icons',
             type: 'symbol',
             source: 'pois',
+            minzoom: 6,
             layout: {
                 'icon-image': [
                     'match', ['get', 'type'],
@@ -807,11 +1055,14 @@
                     'Lake', 'lake',
                     'River', 'river',
                     'Woods', 'woods',
+                    'Beach', 'beach',
+                    'Mountain', 'mountain',
+                    'Heritage', 'heritage',
                     'dot-11'
                 ],
                 // (7) POI icon size: 0.5 is already smaller than "typical default 1.0"
                 // Most Mapbox symbol icons are around 1.0 (varies by sprite). 0.5–0.8 is a common reduced size.
-                'icon-size': 0.5,
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 6, 0.18, 12, 0.38],
 
                 // POI label
                 'text-field': ['get', 'name'],
@@ -844,6 +1095,21 @@
                 .setHTML(`<strong>${feature.properties.name}</strong>`)
                 .addTo(map);
         });
+        // ✅ CLICK ROUTE TO SELECT WALK (park + normal)
+        map.on("click", "walk-routes", (e) => {
+            const wid = Number(e.features?.[0]?.properties?.walkid);
+            if (!wid) return;
+            selectWalkById(wid);
+        });
+
+// Mobile tap (optional, but helps)
+        map.on("touchstart", "walk-routes", (e) => {
+            const wid = Number(e.features?.[0]?.properties?.walkid);
+            if (!wid) return;
+            selectWalkById(wid);
+            e.preventDefault();
+        });
+
         // === [PARK-HOVER-01] ===
         // === [PARK-HOVER-02] ===
 // Robust hover popup: show on mousemove over parks, hide whenever not over parks.
@@ -948,9 +1214,9 @@
         map.jumpTo({ center: v.center, zoom: v.zoom });
 
         // === [PARK-BACK-BTN-JS-02] ===
-        document.getElementById("backToAllWalksBtn").addEventListener("click", () => {
-            backToAllWalks();
-        });
+        const backBtn = document.getElementById("backToAllWalksBtn");
+        if (backBtn) backBtn.addEventListener("click", backToAllWalks);
+
 
     });
     const inclineMinInput = document.getElementById('inclineMinInput');
@@ -991,9 +1257,9 @@
         let min = Number(inclineMinInput.value);
         let max = Number(inclineMaxInput.value);
         if (Number.isNaN(min)) min = 0;
-        if (Number.isNaN(max)) max = 1500;
-        min = clamp(min, 0, 1500);
-        max = clamp(max, 0, 1500);
+        if (Number.isNaN(max)) max = 5000;
+        min = clamp(min, 0, 5000);
+        max = clamp(max, 0, 5000);
         if (min > max) [min, max] = [max, min];
         inclineSlider.noUiSlider.set([min, max]);
     }
@@ -1002,9 +1268,9 @@
         let min = Number(lengthMinInput.value);
         let max = Number(lengthMaxInput.value);
         if (Number.isNaN(min)) min = 0;
-        if (Number.isNaN(max)) max = 30;
-        min = clamp(min, 0, 30);
-        max = clamp(max, 0, 30);
+        if (Number.isNaN(max)) max = 200;
+        min = clamp(min, 0, 200);
+        max = clamp(max, 0, 200);
         if (min > max) [min, max] = [max, min];
         lengthSlider.noUiSlider.set([min, max]);
     }
@@ -1173,11 +1439,11 @@
 
 
         // ===== PARK DRILL MODE =====
-
+        showBackToAllWalksBtn(false);
         if (selectedParkName){
-
+            showBackToAllWalksBtn(true);
             const parkLower = selectedParkName.toLowerCase();
-
+            parkWalkIds = getParkWalkIdsByName(selectedParkName);
             // === [DRILL-FIX-02] ===
             const PARK_EXPR = [
                 "downcase",
@@ -1226,6 +1492,17 @@
                 parkLower
             ]);
 
+            // ✅ show ALL routes for walks in this park + give each a different colour
+            map.setFilter("walk-routes", [
+                "in",
+                ["to-number", ["get","walkid"]],
+                ["literal", parkWalkIds]
+            ]);
+            setRoutesMultiColour(parkWalkIds);
+
+// optional: hide hover layer unless you want it active
+            map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+
             updateWalkTable();
 
             zoomToSelectedParkIfNeeded();
@@ -1238,38 +1515,23 @@
 
         const hideParkWalksExpr = [
             "!",
-            ["in",
-                ["to-number", ["get","walkid"]],
-                ["literal", [...multiWalkParkWalkIds]]
-            ]
+            ["in", ["to-number", ["get","walkid"]], ["literal", [...multiWalkParkWalkIds]]]
         ];
 
-        map.setFilter("walk-points",[
-            "all",
-            baseFilter,
-            hideParkWalksExpr
-        ]);
+        // NORMAL LIST MODE: show ALL walk points that match baseFilter
+        map.setFilter("walk-points", ["all", baseFilter, hideParkWalksExpr]);
 
+        map.setLayoutProperty("park-points", "visibility", "visible");
 
-        map.setLayoutProperty(
-            "park-points",
-            "visibility",
-            "visible"
-        );
+// Hide routes + POIs when not drilled into a park and no walk selected
+        map.setFilter("walk-routes", ["==", ["to-number", ["get","walkid"]], -1]);
+        map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+        map.setFilter("poi-icons", ["==", ["to-number", ["get","walkid"]], -1]);
 
-        map.setFilter("walk-routes",[
-            "==",
-            "walkid",
-            -1
-        ]);
-
-        map.setFilter("poi-icons",[
-            "==",
-            "walkid",
-            -1
-        ]);
-
+        showBackToAllWalksBtn(false);
         updateWalkTable();
+
+
 
     }
 
@@ -1285,11 +1547,20 @@
         const poiMatchIds = getWalkIdsMatchingPOI_AND(state.poiTypes);
 
         const features = map.querySourceFeatures('walks');
+        // ✅ If a park is selected, table must only show walks in that park
+        const parkLower = selectedParkName ? selectedParkName.trim().toLowerCase() : null;
+
         const seen = new Set();
         const out = [];
 
         for (const f of features) {
             const wid = Number(f.properties.walkid);
+            // ✅ Park drill: hide all other walks from the table
+            if (parkLower) {
+                const p = getWalkParkName(f.properties).toLowerCase();
+                if (p !== parkLower) continue;
+            }
+
             if (seen.has(wid)) continue;
             seen.add(wid);
 
@@ -1390,7 +1661,7 @@
 
     /* (9) sortable table */
     function setSortIndicators() {
-        ["name","length_km","Difficulty"].forEach(k => {
+        ["name","length_km","incline","Difficulty"].forEach(k => {
             document.getElementById("sort-" + k).textContent = "↕";
         });
         const arrow = sortState.dir === "asc" ? "▲" : "▼";
@@ -1413,8 +1684,9 @@
             let av = a.properties[k];
             let bv = b.properties[k];
 
-            if (k === "length_km") { av = Number(av); bv = Number(bv); }
+            if (k === "length_km" || k === "incline") { av = Number(av); bv = Number(bv); }
             else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+
 
             if (av < bv) return sortState.dir === "asc" ? -1 : 1;
             if (av > bv) return sortState.dir === "asc" ? 1 : -1;
@@ -1426,10 +1698,12 @@
         rows = rows.filter(f => {
             const name = String(f.properties.name || "").toLowerCase();
             const len  = String(f.properties.length_km || "").toLowerCase();
+            const inc  = String(f.properties.incline || "").toLowerCase();
             const diff = String(f.properties.Difficulty || "").toLowerCase();
 
             if (columnSearch.name && !name.includes(columnSearch.name)) return false;
             if (columnSearch.length_km && !len.includes(columnSearch.length_km)) return false;
+            if (columnSearch.incline && !inc.includes(columnSearch.incline)) return false;
             if (columnSearch.Difficulty && !diff.includes(columnSearch.Difficulty)) return false;
             return true;
         });
@@ -1443,6 +1717,7 @@
             tr.innerHTML = `
         <td>${f.properties.name}</td>
         <td>${f.properties.length_km}</td>
+        <td>${f.properties.incline}</td>
         <td>${f.properties.Difficulty}</td>
         <td>
           <div class="row-actions">
@@ -1534,7 +1809,23 @@
 
         // show only selected
         map.setFilter('walk-points', ['==','walkid', selectedWalkId]);
-        map.setFilter('walk-routes', ['==','walkid', selectedWalkId]);
+        if (selectedParkName) {
+            // keep all park routes visible
+            map.setFilter("walk-routes", [
+                "in",
+                ["to-number", ["get","walkid"]],
+                ["literal", parkWalkIds]
+            ]);
+            setRoutesMultiColour(parkWalkIds);
+
+            // "select" route using the hover highlight layer
+            map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], Number(selectedWalkId)]);
+        } else {
+            // normal non-park selection: show only this route
+            map.setFilter('walk-routes', ['==','walkid', selectedWalkId]);
+            map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+        }
+
 
         // show POIs for selected walk
         applyPOIFilterForSelectedWalk();
@@ -1544,23 +1835,26 @@
         document.getElementById('walkTableContainer').style.display = 'none';
         document.getElementById('walkDetails').style.display = 'block';
         document.getElementById('walk-name').innerText = props.name;
-        const parts = [
-            `Length: ${props.length_km} km`,
-            `Incline: ${props.incline} m`,
-            `Difficulty: ${props.Difficulty}`
-        ];
+        const rows = [];
+        rows.push({k:"Length", v:`${props.length_km} km`, hi:false});
+        rows.push({k:"Incline", v:`${props.incline} m`, hi:false});
+        rows.push({k:"Difficulty", v:`${props.Difficulty}`, hi:false});
 
-// Only add if not NA / not empty
+        if (isRealValue(props.opening_hours)) rows.push({k:"Opening Hours", v:`${props.opening_hours}`, hi:true});
+        if (isRealValue(props.entery_fee))    rows.push({k:"Entry Cost", v:`${props.entery_fee}`, hi:true});
+
+        document.getElementById("walk-info").innerHTML = `
+  <table class="walkInfoTable">
+    <tbody>
+      ${rows.map(r => `
+        <tr class="${r.hi ? "highlightRow" : ""}">
+          <th>${r.k}</th><td>${r.hi ? `<strong>${r.v}</strong>` : r.v}</td>
+        </tr>`).join("")}
+    </tbody>
+  </table>
+`;
 
 
-        if (isRealValue(props.opening_hours)) {
-            parts.push(`<strong>Opening Hours: ${props.opening_hours}</strong>`);
-        }
-        if (isRealValue(props.entery_fee)) {
-            parts.push(`<strong>Entry Cost: ${props.entery_fee}</strong>`);
-        }
-
-        document.getElementById('walk-info').innerHTML = parts.join(" | ");
 
 
         const iframe = document.getElementById('video');
@@ -1583,12 +1877,16 @@
             iframe.src = "";
             iframe.style.display = "none";
         }
+// === [SOCIAL-03] ===
+        const social = document.getElementById("socialBar");
+        if (social) social.style.display = "flex";
 
 
 
         zoomToRoute(selectedWalkId);
         // === [PARK-BACK-BTN-JS-03] ===
-        showBackToAllWalksBtn(true);
+        showBackToAllWalksBtn(false);
+
 
     }
     function zoomToSelectedParkIfNeeded(){
@@ -1690,20 +1988,19 @@
         // restore list view filters
         document.getElementById('walkDetails').style.display='none';
         document.getElementById('walkTableContainer').style.display = 'block';
-
+        map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
         map.setFilter('poi-icons',['==','walkid',-1]);
         map.setFilter('walk-routes',['==','walkid',-1]);
         if (window.matchMedia("(max-width: 768px)").matches) {
             document.getElementById('mobilePanelHandle').style.display = 'block';
         }
+
+
         resetMobilePanelHeight();
        applyAllFilters();
-        if (lastListView) {
-            map.jumpTo({ center: lastListView.center, zoom: lastListView.zoom });
-        } else {
-            const v = getIrelandView();
-            map.jumpTo({ center: v.center, zoom: v.zoom });
-        }
+        const v = getIrelandView();
+        map.flyTo({ center: v.center, zoom: v.zoom, essential: true });
+
 
     }
 
@@ -1795,8 +2092,8 @@
         if (selectedWalkId) resetSelection();
 
         // reset sliders
-        inclineSlider.noUiSlider.set([0, 1500]);
-        lengthSlider.noUiSlider.set([0, 30]);
+        inclineSlider.noUiSlider.set([0, 5000]);
+        lengthSlider.noUiSlider.set([0, 200]);
 
         // reset dropdowns/selects
         document.querySelector('input[name="difficultyRadio"][value="all"]').checked = true;
@@ -1809,6 +2106,7 @@
         // clear table column searches
         columnSearch.name = "";
         columnSearch.length_km = "";
+        columnSearch.incline = "";
         columnSearch.Difficulty = "";
         document.querySelectorAll('.thSearch').forEach(inp => inp.value = "");
         document.querySelectorAll('#walkTable thead th[data-col]').forEach(th => th.classList.remove('search-open'));
@@ -1851,8 +2149,10 @@
     const columnSearch = {
         name: "",
         length_km: "",
+        incline: "",
         Difficulty: ""
     };
+
 
     /* Sorting ONLY when clicking the small sort handle */
     document.querySelectorAll('.sortHandle').forEach(el => {
@@ -1901,11 +2201,8 @@
             }
         });
     });
-    const IRELAND_VIEW_DESKTOP = { center: [-8.2, 53.4], zoom: 6.5 };
-    const IRELAND_VIEW_MOBILE  = { center: [-8.2, 53.4], zoom: 5.6 };
-
-
-
+    const IRELAND_VIEW_DESKTOP = { center: [-8.2, 53.4], zoom: 5.6 };
+    const IRELAND_VIEW_MOBILE  = { center: [-8.2, 53.4], zoom: 5.1 };
 
     function zoomToSelectedCounties() {
         if (!mapLoaded) return;
