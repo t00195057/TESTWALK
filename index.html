@@ -45,7 +45,7 @@
             background:#fff;color:var(--secondary);border:1px solid var(--border);
             padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;
         }
-        #clearFiltersBtn:hover{ background: var(--bg-light); }
+        #clearFiltersBtn:hover{ filter:brightness(.95); }
 
         #mobilePanelHandle{
             position:sticky;top:0;z-index:5;display:none;width:100%;
@@ -115,7 +115,8 @@
             #walkTable thead{
             position: sticky;
             top: 0;
-            z-index: 60;                              /* above rows */
+            z-index: 60;    
+             background: var(--brandGradient);                          /* above rows */
         }
 
         #walkTable thead tr{
@@ -229,14 +230,30 @@
         #appWrap.panel-collapsed #panelToggleBtn{
             left: 18px;               /* ✅ when full map, tuck to left edge */
         }
-
+.statusBox{
+  height: 34px;
+  width: 240px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:0 10px;
+  font-weight:700;
+  font-size:12px;
+  color:var(--secondary);
+  background:#fff;
+}
 
         #appWrap.panel-collapsed #panel{display:none}
         #appWrap.panel-collapsed #map{width:100%}
-
+        #zoomOutBtn{
+        top:12px;
+        left: calc(33% + 12px);
+        }
+        #appWrap.panel-collapsed #zoomOutBtn{
+        left: 12px;
+        }
         #panelToggleBtn{
             position:absolute;
-            top:12px;
+            top:58px;
             left: calc(33% + 12px);   /* ✅ sits just inside the map, beside the panel */
             z-index:60;
             background:var(--primary);
@@ -261,7 +278,7 @@
         .actionBtn.primary{background:var(--primary);color:#fff;box-shadow:0 10px 18px rgba(31,122,109,0.22)}
         .actionBtn.primary:hover{filter:brightness(.96)}
         .actionBtn.secondary{background:#fff;color:var(--secondary);border-color:#dfe7e5}
-        .actionBtn.secondary:hover{background:#f6faf9}
+        .actionBtn.secondary:hover{filter:brightness(.95); }
         #walkDetails{ padding:20px;
             border:2px solid var(--brandGreen);
             border-radius:16px;
@@ -285,6 +302,11 @@
             font-weight: 700;
             line-height: 1.2;
         }
+        #walkTable tbody tr.rowHover{
+            outline: 2px solid rgba(255,255,255,0.9);
+            outline-offset: -2px;
+            background-color: #c0c0c2;
+            }
         .walkInfoGrid{
                     display:grid;
                     grid-template-columns: 1fr 1fr;
@@ -303,7 +325,7 @@
         }
         #backToAllWalksBtn{
             position:absolute;
-            top:58px;              /* just below Full map */
+            top:104px;              /* just below Full map */
             left: calc(33% + 12px);
             z-index:60;
             background: var(--brandGradient);
@@ -319,11 +341,10 @@
 
         #backToParkBtn{
             position:absolute;
-            top:104px;             /* below Back to all walks */
+            top:150px;             /* below Back to all walks */
             left: calc(33% + 12px);
             z-index:60;
-            background:#fff;
-            color:var(--secondary);
+            color:#fff;
             border:1px solid var(--border);
             border-radius:10px;
             padding:10px 12px;
@@ -351,13 +372,23 @@
         }
 
         @media (max-width: 768px){
-            #backToAllWalksBtn{
-                left:12px;
-                top:58px;
-            }
-        }
-
-        #walkTable tr:hover{background:var(--bg-light)}
+           #zoomOutBtn{
+    top: 15px;
+    left: 12px;
+  }
+ 
+  #backToAllWalksBtn{
+    top: 65px;
+    left: 12px;
+  }
+  #backToParkBtn{
+    top: 115px;
+    left: 12px;
+  }
+}
+ #walkTable th:hover{filter:brightness(.85);} 
+        #walkTable tbody tr:hover{background:var(--bg-light)}
+        
         #walkTable th{user-select:none;cursor:pointer;position:sticky;top:0;font-size:12px;z-index:61}
         .th-sort-indicator{font-size:11px;opacity:.75;margin-left:6px}
         #walkTableContainer{ flex:1; overflow:auto; }
@@ -464,8 +495,16 @@
             .miniInput{ width:48px; height:26px; font-size:12px; padding:0 6px; }
 
             /* App layout mobile */
-            #appWrap{flex-direction: column-reverse; height: calc(100vh - 60px);}
-            #map{width:100%;height:60vh;}
+            #appWrap{
+                    position: relative;
+                    height: 100vh;
+                    display:block;
+                    }
+
+            #map{
+                    width:100%;
+                    height:100vh;
+                    }
             .walkInfoTable{
                 width:100%;
                 border-collapse:collapse;
@@ -490,18 +529,23 @@
             }
 
             /* Bottom sheet / panel */
-            #panel{
-                width:100%;
-                height:40vh;
-                max-height:75vh;
-                min-height:18vh;
-                border-left:none;
+          #panel{
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: 40vh;
+                max-height: 92vh;
+                min-height: 0vh;
+                z-index: 5000000;
+                background:#fff;
                 border-top:1px solid var(--border);
+                border-left:none;
                 padding: 10px 14px 14px;
                 overflow:hidden;
-                position:relative;
-                touch-action:pan-y;
-            }
+                touch-action: pan-y;
+                }
             #logoImg{
                 height:40px;      /* was 80 */
                 max-width:42vw;
@@ -555,6 +599,10 @@
             #appWrap.mobile-panel-collapsed #walkTableContainer{ display:none; }
             #appWrap.mobile-panel-collapsed #panel{ height:auto; padding:10px 14px; }
             #appWrap.mobile-panel-collapsed #map{ height: calc(100vh - 60px - 62px); }
+            #walkDetails h2{ font-size:15px; margin:0 0 8px; }
+            #walk-info{ font-size:11px; }
+            .walkInfoTable{ font-size:11px; }
+            .walkInfoTable th, .walkInfoTable td{ padding:6px 8px; }
         }
         /*may have to remove for licancing*/
         .mapboxgl-ctrl-logo{ display:none !important; }
@@ -682,6 +730,8 @@
         </div>
     </div>
         <button id="clearFiltersBtn" type="button" onclick="clearAllFilters()">Clear filters</button>
+        <input id="clickCoordsBox" class="statusBox" type="text" readonly value="Click map → lng,lat">
+        <input id="viewBox" class="statusBox" type="text" readonly value="center / zoom">
 </div>
 </div>
 <!-- MOBILE FILTERS BACKDROP (added) -->
@@ -764,7 +814,13 @@
     <!-- overlays stay inside appWrap so they float above the map -->
 
 
-    <button id="panelToggleBtn" class="mapBtn" type="button" onclick="togglePanel()">⤢ Full map</button>
+    
+    
+    <button id="zoomOutBtn" class="mapBtn" type="button" onclick="zoomOutToFullMap()">
+  ⤢ Zoom out
+</button>
+
+<button id="panelToggleBtn" class="mapBtn" type="button" onclick="togglePanel()">⤢ Full map</button>
     
     <button id="backToAllWalksBtn" class="mapBtn" type="button" onclick="backToAllWalks()" style="display:none;">
         ← Back to all walks
@@ -997,10 +1053,11 @@ map.on('style.load', hideNonRoadLabels);
 
     function backToPark(){
         if (!selectedParkName) return;
-
+        clearDynamicMapLocks();
+        map.stop();
         // Clear selected walk, keep park drill mode
         selectedWalkId = null;
-        clearDynamicMapLocks();
+        
         // Panel UI: show table again
         document.getElementById('walkDetails').style.display = 'none';
         document.getElementById('walkTableContainer').style.display = 'block';
@@ -1036,6 +1093,8 @@ map.on('style.load', hideNonRoadLabels);
         // Hide selected-only layers
         map.setFilter('poi-icons', ['==', 'walkid', -1]);
         map.setFilter('walk-routes', ['==', 'walkid', -1]);
+        setFilterSafe("walk-routes-casing", ["==", ["to-number", ["get","walkid"]], -1]);
+        setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
 
         // Re-run normal filters now that selectedWalkId is cleared
         applyAllFilters();
@@ -1063,6 +1122,34 @@ if (wasInPark) {
         }
         resetMobilePanelHeight();
     }
+   function zoomOutToFullMap(){
+    map.stop(); 
+    clearDynamicMapLocks()
+    if (!mapLoaded) return;
+      
+  // clear selection states
+  selectedWalkId = null;
+  selectedParkName = null;
+  clearDynamicMapLocks();
+  // restore panel UI
+  document.getElementById('walkDetails').style.display = 'none';
+  document.getElementById('walkTableContainer').style.display = 'block';
+
+  setFilterSafe("walk-routes", ["==", ["to-number", ["get","walkid"]], -1]);
+  setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+  setFilterSafe("walk-routes-casing", ["==", ["to-number", ["get","walkid"]], -1]); 
+  setFilterSafe("poi-icons", ["==", ["to-number", ["get","walkid"]], -1]);
+
+
+  // re-apply normal list-mode filters (this restores walk dots + parks)
+  applyAllFilters();
+
+  // now fly to Ireland view (centred + zoom)
+  const v = getIrelandView();
+  map.flyTo({ center: v.center, zoom: v.zoom, essential: true });
+  showBackToAllWalksBtn(false);
+  showBackToParkBtn(false);
+}
     // === [PARK-MULTI-ROUTES-02] ===
     function getParkWalkIdsByName(parkName){
         if (!mapLoaded || !parkName) return [];
@@ -1181,7 +1268,23 @@ if (wasInPark) {
             ["brown", "#9a6324"],
             ["teal", "#008080"]
         ]);
+            // --- Add near the top of setRoutesMultiColour(ids) ---
+            function buildOffsets(ids){
+            // meters on screen; tweak if you want more separation
+            const step = 2.5;
 
+            // distribute offsets symmetrically: -3, -2, -1, 0, 1, 2, 3 ...
+            const n = ids.length;
+            const offsets = ids.map((id, i) => {
+                const centered = i - (n - 1) / 2;
+                return Math.round(centered) * step;
+            });
+
+            const expr = ["match", ["to-number", ["get","walkid"]]];
+            ids.forEach((id, i) => { expr.push(Number(id), offsets[i]); });
+            expr.push(0);
+            return expr;
+            }
         function colourFromWalkName(name){
             const s = String(name || "").toLowerCase();
             for (const [key, hex] of nameColours.entries()){
@@ -1237,13 +1340,37 @@ if (wasInPark) {
             6,
             3
         ]);
-
+            // ✅ casing slightly thicker than colour
+            map.setPaintProperty("walk-routes-casing", "line-width", [
+            "case",
+            ["boolean", ["feature-state","hover"], false],
+            5,
+            3
+            ]);
         map.setPaintProperty("walk-routes", "line-opacity", [
             "case",
             ["boolean", ["feature-state","hover"], false],
             1,
             0.9
         ]);
+const offsetExpr = buildOffsets(ids);
+map.setPaintProperty("walk-routes", "line-offset", offsetExpr);
+map.setPaintProperty("walk-routes-casing", "line-offset", offsetExpr);
+
+// --- widths: casing must be wider than route ---
+map.setPaintProperty("walk-routes", "line-width", [
+  "case",
+  ["boolean", ["feature-state","hover"], false],
+  6,
+  3
+]);
+
+map.setPaintProperty("walk-routes-casing", "line-width", [
+  "case",
+  ["boolean", ["feature-state","hover"], false],
+  8,   // casing wider than route (hover)
+  5    // casing wider than route (normal)
+]);
     }
 
 
@@ -1290,6 +1417,12 @@ if (wasInPark) {
         document.getElementById('countyBtn').textContent = countyCount ? `Counties (${countyCount})` : 'Counties';
         document.getElementById('poiBtn').textContent = poiCount ? `Points of Interest (${poiCount})` : 'Points of Interest';
     }
+    function updateViewBox(){
+            const box = document.getElementById("viewBox");
+            if (!box || !map) return;
+            const c = map.getCenter();
+            box.value = `center ${c.lng.toFixed(5)},${c.lat.toFixed(5)} | zoom ${map.getzoom() -0.9.toFixed(2)}`;
+            }
 
     // map.on('style.load', () => {
 //     hideBaseMapLabelsAndRoads();
@@ -1322,6 +1455,19 @@ map.on('load', async () => {
                 "circle-stroke-color": "#ffffff"
             }
         });
+        map.addLayer({
+                id:'park-points-hover',
+                type:'circle',
+                source:'parks',
+                filter:["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"],
+                paint:{
+                    'circle-radius': 10,
+                    'circle-color': '#ffffff',
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#1f7a6d'
+                }
+                });
+    
         map.addSource('routes', { type:'geojson', data: (ROUTES_DATA || 'routes.geojson') });
         map.addSource('pois',  { type:'geojson', data: (POIS_DATA  || 'pois.geojson')  });
 
@@ -1332,7 +1478,35 @@ map.on('load', async () => {
             source:'walks',
             paint:{ 'circle-radius':4, 'circle-color':'#007cbf' } // was 6
         });
+        map.addLayer({
+            id:'walk-points-hover',
+            type:'circle',
+            source:'walks',
+            filter:["==", ["to-number", ["get","walkid"]], -1],
+            paint:{
+                'circle-radius': 9,
+                'circle-color': '#ffffff',
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#1f7a6d'
+            }
+            });
+updateViewBox();
+map.on("moveend", updateViewBox);
+map.on("zoomend", updateViewBox);
+map.on("mouseenter", "park-points", () => { map.getCanvas().style.cursor = "pointer"; });
 
+map.on("mousemove", "park-points", (e) => {
+  const f = e.features && e.features[0];
+  if (!f) return;
+
+  const parkName = f.properties?.parkName;
+  highlightParkRows(parkName, true);
+});
+
+map.on("mouseleave", "park-points", () => {
+  map.getCanvas().style.cursor = "";
+  highlightParkRows(null, false);
+});
 // === [MOBILE-TAP-01] ===
         map.on("touchstart", () => {
             const filtersOpen = document.getElementById("filters").classList.contains("mobile-open");
@@ -1345,13 +1519,27 @@ map.on('load', async () => {
             selectWalkById(feature.properties.walkid);
             e.preventDefault();
         });
-
+            map.addLayer({
+            id: 'walk-routes-casing',
+            type: 'line',
+            source: 'routes',
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            paint: {
+                'line-width': 4,          // thinner border (adjust 3.5–5)
+                'line-color': '#000000',  // MUST be visible
+                'line-opacity': 1
+            }
+        });
 
         // routes
         map.addLayer({
             id:'walk-routes',
             type:'line',
             source:'routes',
+            layout: { 'line-join':'round', 'line-cap':'round' },
             paint:{ 'line-width':3, 'line-color':'#d7191c' } // slightly slimmer
         });
 
@@ -1367,10 +1555,13 @@ map.on('load', async () => {
         });
         const routePopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false });
 
-        function clearRouteHover(){
-            map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
-            routePopup.remove();
-        }
+    function clearRouteHover(){
+  setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+  routePopup.remove();
+
+  // remove any lingering row highlight
+  document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+}
 
         map.on("mousemove", "walk-routes", (e) => {
   const wid = Number(e.features?.[0]?.properties?.walkid);
@@ -1388,13 +1579,17 @@ map.on('load', async () => {
 
   // Normal hover behaviour when NOT locked to a selected walk
   setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], wid]);
-
+setTableRowHover(wid, true);
   routePopup
     .setLngLat(e.lngLat)
     .setHTML(`<strong>${getWalkNameById(wid)}</strong>`)
     .addTo(map);
 });
-
+map.on("click", (e) => {
+  const box = document.getElementById("clickCoordsBox");
+  if (!box) return;
+  box.value = `${e.lngLat.lng.toFixed(6)}, ${e.lngLat.lat.toFixed(6)}`;
+});
         map.on("mouseleave", "walk-routes", clearRouteHover);
 
 
@@ -1492,16 +1687,39 @@ map.on('load', async () => {
         // Hide everything initially
         map.setFilter('poi-icons', ['==', 'walkid', -1]);
         map.setFilter('walk-routes', ['==', 'walkid', -1]);
+        map.setFilter('walk-routes-casing', ["==", ["to-number", ["get","walkid"]], -1]);
 
         // Hover popup for walk names only (your own data)
         const hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, offset:10 });
         map.on('mouseenter', 'walk-points', (e) => {
-            map.getCanvas().style.cursor = 'pointer';
-            const feature = e.features[0];
-            hoverPopup.setLngLat(feature.geometry.coordinates)
-                .setHTML(`<strong>${feature.properties.name}</strong>`)
-                .addTo(map);
-        });
+  map.getCanvas().style.cursor = 'pointer';
+  const feature = e.features[0];
+  const p = feature.properties || {};
+  const wid = Number(p.walkid);
+
+  setTableRowHover(wid, true);
+
+  hoverPopup.setLngLat(feature.geometry.coordinates)
+    .setHTML(`
+      <div style="font-family:Manrope; font-size:12px;">
+        <div style="font-weight:900; margin-bottom:6px;">${p.name || `Walk ${wid}`}</div>
+        <div style="display:grid; grid-template-columns:auto auto; gap:6px 10px;">
+          <div><strong>Length:</strong></div><div>${p.length_km ?? ""} km</div>
+          <div><strong>Incline:</strong></div><div>${p.incline ?? ""} m</div>
+        </div>
+      </div>
+    `)
+    .addTo(map);
+});
+
+
+map.on('mouseleave', 'walk-points', (e) => {
+  map.getCanvas().style.cursor = '';
+  const wid = Number(e.features?.[0]?.properties?.walkid);
+  if (wid) setTableRowHover(wid, false);
+  hoverPopup.remove();
+});
+
         // ✅ CLICK ROUTE TO SELECT WALK (park + normal)
         map.on("click", "walk-routes", (e) => {
             const wid = Number(e.features?.[0]?.properties?.walkid);
@@ -1574,7 +1792,7 @@ map.on('load', async () => {
             // save list view (so we can go back)
             if (!selectedParkName && !selectedWalkId) {
                 const c = map.getCenter();
-                lastListView = { center: [c.lng, c.lat], zoom: map.getZoom() };
+                lastListView = { center: [c.lng, c.lat], zoom: map.getzoom() -0.9 };
             }
 
             selectedParkName = String(f.properties.parkName).trim();
@@ -1588,8 +1806,8 @@ map.on('load', async () => {
             // Lock panning to this park's route perimeter (with a margin)
 const pb = getRouteBoundsForWalkIds(parkWalkIdsAll.length ? parkWalkIdsAll : parkWalkIds);
 if (pb) {
-    map.setMaxBounds(expandBounds(pb, 2));
-    map.setMinZoom(map.getZoom()); // prevent zooming out too far while in park
+    map.setMaxBounds(expandBounds(pb, 0.12));
+    map.setMinZoom(map.getzoom() -0.9); // prevent zooming out too far while in park
 }
             // show the back button
             showBackToAllWalksBtn(true);
@@ -1882,7 +2100,12 @@ if (pb) {
                 ["to-number", ["get","walkid"]],
                 ["literal", parkWalkIds]
             ]);
-
+            // Show casing/border for all park routes while in park mode
+                setFilterSafe("walk-routes-casing", [
+                "in",
+                ["to-number", ["get","walkid"]],
+                ["literal", parkWalkIds]
+                ]);
             setRoutesMultiColour(parkWalkIds);
 
             // Hover layer off by default in park mode (we use it only to indicate selection)
@@ -1893,7 +2116,13 @@ if (pb) {
             setFilterSafe("poi-icons", ["in", ["to-number", ["get","walkid"]], ["literal", parkWalkIdsAll]]);
 
             updateWalkTable();
+            
             zoomToParkName(selectedParkName, true);
+            map.once("moveend", () => {
+                const rb = getRouteBoundsForWalkIds(parkWalkIdsAll);
+                if (rb) map.setMaxBounds(expandBounds(rb, 0.12));
+                map.setMinZoom(map.getzoom() -0.9);
+                });
             return;
         }
 
@@ -1901,7 +2130,7 @@ if (pb) {
 
         // Walk points visible
         map.setLayoutProperty("walk-points", "visibility", "visible");
-
+        map.setLayoutProperty("walk-routes-casing", "visibility", "visible");
         // Hide walk-points that belong to currently visible parks to avoid duplicates.
         // (If you prefer duplicates, remove this "hideParkWalksExpr".)
         const hideParkWalksExpr = [
@@ -1918,7 +2147,7 @@ if (pb) {
         map.setFilter("walk-routes", ["==", ["to-number", ["get","walkid"]], -1]);
         map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
         setFilterSafe("poi-icons", ["==", ["to-number", ["get","walkid"]], -1]);
-
+        setFilterSafe("walk-routes-casing", ["==", ["to-number", ["get","walkid"]], -1]);
         showBackToAllWalksBtn(false);
         updateWalkTable();
     }
@@ -2105,7 +2334,9 @@ if (pb) {
             const [lng, lat] = f.geometry.coordinates;
 
             const tr = document.createElement('tr');
-
+            tr.dataset.walkid = String(walkId);
+            tr.dataset.parkname = (getWalkParkName(f.properties) || "").trim().toLowerCase();
+            tr.dataset.walkid = walkId;
             tr.innerHTML = `
         <td>${f.properties.name}</td>
         <td>${f.properties.length_km}</td>
@@ -2130,6 +2361,30 @@ if (pb) {
                 ev.stopPropagation();
                 openDirectionsTo(lng, lat);
             });
+
+            tr.addEventListener('mouseenter', () => {
+                if (selectedWalkId) return;
+
+                setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], walkId]);
+
+                const parkName = getWalkParkName(f.properties).trim().toLowerCase();
+                if (parkName && parkName !== "na"){
+                    setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], parkName]);
+                }
+
+                if (selectedParkName){
+                    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], walkId]);
+                }
+                });
+
+                tr.addEventListener('mouseleave', () => {
+                setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+                setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+
+                if (!selectedWalkId && selectedParkName){
+                    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+                }
+                });
 
             tbody.appendChild(tr);
         });
@@ -2178,7 +2433,7 @@ if (pb) {
         // Only apply hiding when a WALK is selected
         if (!selectedWalkId) return;
 
-        const z = map.getZoom();
+        const z = map.getzoom() -0.9;
         if (z < POI_HIDE_ZOOM_SELECTED){
             setFilterSafe('poi-icons', ['==', ['to-number',['get','walkid']], -1]);
         } else {
@@ -2212,7 +2467,7 @@ function applyPOIFilterForSelectedWalk() {
         if (!selectedWalkId) {
             lastListState = getFilterState();
             const c = map.getCenter();
-            lastListView = { center: [c.lng, c.lat], zoom: map.getZoom() };
+            lastListView = { center: [c.lng, c.lat], zoom: map.getzoom() -0.9 };
         }
 
         const props = feature.properties || {};
@@ -2228,6 +2483,11 @@ function applyPOIFilterForSelectedWalk() {
                 ["to-number", ["get","walkid"]],
                 ["literal", parkWalkIds]
             ]);
+            setFilterSafe("walk-routes-casing", [
+                "in",
+                ["to-number", ["get","walkid"]],
+                ["literal", parkWalkIds]
+            ]);
             setRoutesMultiColour(parkWalkIds);
 
             // selected route highlight
@@ -2235,7 +2495,14 @@ function applyPOIFilterForSelectedWalk() {
         } else {
             // show only this route
             setFilterSafe('walk-routes', ['==', 'walkid', selectedWalkId]);
+            setFilterSafe('walk-routes-casing', ['==', 'walkid', selectedWalkId]);
             setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+            map.setPaintProperty("walk-routes", "line-offset", 0);
+             map.setPaintProperty("walk-routes-casing", "line-offset", 0);
+            // ✅ not in park mode: don't offset
+        try { map.setPaintProperty("walk-routes", "line-offset", 0);
+             map.setPaintProperty("walk-routes-casing", "line-offset", 0);
+         } catch(e){}
         }
 
         // show POIs for selected walk (all POIs)
@@ -2328,16 +2595,21 @@ if (isRealValue(entryFee)) fullRows.push({ k:"Entry Fee", v:`${entryFee}`, hi:tr
             iframe.src = "";
             iframe.style.display = "none";
         }
+if (!selectedParkName) {
+  // Normal (non-park) walk selection: zoom + lock to walk perimeter
+  zoomToRoute(selectedWalkId);
 
-        zoomToRoute(selectedWalkId);
-        // Lock panning to this walk's route bounds (with a margin)
-        const rb = getRouteBoundsForWalk(selectedWalkId);
-        if (rb) {
-            map.setMaxBounds(expandBounds(rb, 2));
-        }
+  map.once("moveend", () => {
+    const rb = getRouteBoundsForWalk(selectedWalkId);
+    if (rb) map.setMaxBounds(expandBounds(rb, 0.12));
 
-        // Prevent zooming out too far while selected (button is the way back)
-        map.setMinZoom(map.getZoom());
+    // Prevent zooming out too far while a walk is selected
+    map.setMinZoom(map.getzoom() -0.9);
+  });
+} else {
+  // Park mode: DO NOT lock to the walk (keep the park bounds lock)
+  // (park click/backToPark already sets maxBounds + minZoom)
+}
         // Back buttons
         showBackToAllWalksBtn(true);
         showBackToParkBtn(!!selectedParkName);
@@ -2610,7 +2882,55 @@ if (isRealValue(entryFee)) fullRows.push({ k:"Entry Fee", v:`${entryFee}`, hi:tr
         incline: "",
         Difficulty: ""
     };
+  let lastHoverWalkId = null;
 
+function highlightParkRows(parkName, on){
+  const p = String(parkName || "").trim().toLowerCase();
+  if (!p) return;
+
+  const tbody = document.querySelector("#walkTable tbody");
+  if (!tbody) return;
+
+  const rows = [...tbody.querySelectorAll("tr")];
+
+  // Clear first
+  rows.forEach(r => r.classList.remove("rowHover"));
+
+  if (!on) return;
+
+  const matches = rows.filter(r => (r.dataset.parkname || "") === p);
+  if (!matches.length) return;
+
+  // Highlight all rows in that park
+  matches.forEach(r => r.classList.add("rowHover"));
+
+  // Scroll to the first alphabetically by walk name (your table is already sorted)
+  matches[0].scrollIntoView({ block:"center", behavior:"smooth" });
+}
+function setTableRowHover(walkId, on) {
+    
+  const tbody = document.querySelector("#walkTable tbody");
+  if (!tbody) return;
+
+  // clear existing highlight
+  tbody.querySelectorAll("tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+
+  if (!on) {
+    lastHoverWalkId = null;
+    return;
+  }
+
+  const row = tbody.querySelector(`tr[data-walkid="${Number(walkId)}"]`);
+  if (!row) return;
+
+  row.classList.add("rowHover");
+
+  // prevent constant scroll-jitter while moving mouse
+  if (lastHoverWalkId !== Number(walkId)) {
+    lastHoverWalkId = Number(walkId);
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+}
 
     /* Sorting ONLY when clicking the small sort handle */
     document.querySelectorAll('.sortHandle').forEach(el => {
@@ -2843,7 +3163,10 @@ if (isRealValue(entryFee)) fullRows.push({ k:"Entry Fee", v:`${entryFee}`, hi:tr
         parks.forEach((p, parkLower) => {
             if (p.filteredIds.size < 1) return;
 
-            p.allIds.forEach(id => visibleParkWalkIds.add(Number(id)));
+              if (p.allIds.size < 2) return;
+
+             p.allIds.forEach(id => visibleParkWalkIds.add(Number(id)));
+
 
             parkFeatures.push({
                 type: "Feature",
