@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Síulóid</title>
+    <link rel="icon" type="image/png" href="icons/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -46,6 +47,22 @@
             padding:7px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;
         }
         #clearFiltersBtn:hover{ filter:brightness(.95); }
+        #topSearch{
+            height: 34px;
+            width: 320px;
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:0 12px;
+            font-weight:700;
+            font-size:13px;
+            color:var(--secondary);
+            background:#fff;
+            }
+        #topSearch:focus{
+            outline:none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(31,122,109,0.15);
+            }
 
         #mobilePanelHandle{
             position:sticky;top:0;z-index:5;display:none;width:100%;
@@ -70,7 +87,6 @@
         /* Top filters bar (desktop default) */
         #filters{
             background: var(--brandGradient);
-            border-bottom:1px solid var(--border);
             display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);
         }
         #filters label{ color:#1f3342;letter-spacing:.2px;font-size:13px;font-weight:600;white-space:nowrap; }
@@ -125,7 +141,7 @@
                 #walkTable th{
                 background: transparent;
                 color:#fff;
-                border-bottom:1px solid rgba(255,255,255,0.25);
+                border-bottom:none;
                 }
 
         /* Mobile filters toggle button (shown only on mobile) */
@@ -240,6 +256,12 @@
   font-size:12px;
   color:var(--secondary);
   background:#fff;
+}
+
+#statusStack{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
         #appWrap.panel-collapsed #panel{display:none}
@@ -417,7 +439,14 @@
                 position: sticky;top: 0;z-index: 4000000;
                 padding: 10px 12px;height:auto;background: var(--brandGreen);
             }
-
+            #topSearch{
+                flex: 1;
+                width: auto;
+                margin: 0 10px;
+                min-width: 120px;
+                font-size: 12px;
+                height: 32px;
+                }
             /* Show filters button on mobile */
             #mobileFiltersToggle{
                 display:inline-flex !important;
@@ -615,12 +644,18 @@
 
 <div id="filters">
     <img id="logoImg" src="icons/logo.png" alt="Logo">
+
+    <input id="topSearch" type="text" placeholder="Search walks / parks…" />
+
     <button id="mobileFiltersToggle" type="button" aria-expanded="false" onclick="toggleMobileFilters()">
         ☰ Filters
     </button>
-    <div id="filtersInner">
 
-
+<!-- NAME / PARK SEARCH -->
+<div class="filterGroup" id="nameSearchGroup">
+  <label>Search (walk / park)</label>
+  <input id="nameSearchInput" class="dd-search" type="text" placeholder="Type a walk or park name…">
+</div>
         <!-- INCLINE GROUP -->
         <div class="filterGroup" id="inclineGroup">
             <label>Incline (m)</label>
@@ -730,8 +765,10 @@
         </div>
     </div>
         <button id="clearFiltersBtn" type="button" onclick="clearAllFilters()">Clear filters</button>
-        <input id="clickCoordsBox" class="statusBox" type="text" readonly value="Click map → lng,lat">
-        <input id="viewBox" class="statusBox" type="text" readonly value="center / zoom">
+        <div id="statusStack">
+  <input id="clickCoordsBox" class="statusBox" type="text" readonly value="Click map → lng,lat">
+  <input id="viewBox" class="statusBox" type="text" readonly value="center / zoom">
+</div>
 </div>
 </div>
 <!-- MOBILE FILTERS BACKDROP (added) -->
@@ -932,7 +969,18 @@ function getRouteBoundsForWalkIds(walkIds) {
 
 function clearDynamicMapLocks(){
     map.setMaxBounds(DEFAULT_MAX_BOUNDS);
-    map.setMinZoom(DEFAULT_MIN_ZOOM);
+  //  map.setMinZoom(DEFAULT_MIN_ZOOM);
+}
+// Lock map to a bounds perimeter, but allow a little zoom-out wiggle
+function lockToBounds(bounds, padRatio = 0.25, zoomOutWiggle = 0.8){
+    if (!bounds) return;
+
+    map.setMaxBounds(expandBounds(bounds, padRatio));
+
+    // Allow user to zoom out slightly without snapping back in
+    const z = map.getZoom();
+    const minZ = Math.max(DEFAULT_MIN_ZOOM, z - zoomOutWiggle);
+    map.setMinZoom(minZ);
 }
     function allPoiFeatures(){
         if (POIS_DATA && Array.isArray(POIS_DATA.features)) return POIS_DATA.features;
@@ -1691,6 +1739,69 @@ map.on("click", (e) => {
 
         // Hover popup for walk names only (your own data)
         const hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, offset:10 });
+        // === [MOBILE-LONGPRESS-POPUP-01] ===
+let longPressTimer = null;
+let longPressActive = false;
+
+function showWalkPopupFromFeature(feature){
+  const p = feature.properties || {};
+  const wid = Number(p.walkid);
+
+  setTableRowHover(wid, true);
+
+  hoverPopup.setLngLat(feature.geometry.coordinates)
+    .setHTML(`
+      <div style="font-family:Manrope; font-size:12px;">
+        <div style="font-weight:900; margin-bottom:6px;">${p.name || `Walk ${wid}`}</div>
+        <div style="display:grid; grid-template-columns:auto auto; gap:6px 10px;">
+          <div><strong>Length:</strong></div><div>${p.length_km ?? ""} km</div>
+          <div><strong>Incline:</strong></div><div>${p.incline ?? ""} m</div>
+        </div>
+      </div>
+    `)
+    .addTo(map);
+}
+
+// Long-press on mobile for walk dots
+map.on("touchstart", "walk-points", (e) => {
+  if (!window.matchMedia("(max-width: 768px)").matches) return;
+
+  // Use nearest walk feature (you already have this helper)
+  const feature = pickNearestWalkFeature(e, 28);
+  if (!feature) return;
+
+  longPressActive = false;
+
+  longPressTimer = setTimeout(() => {
+    longPressActive = true;
+    showWalkPopupFromFeature(feature);
+  }, 350);
+});
+
+map.on("touchmove", "walk-points", () => {
+  clearTimeout(longPressTimer);
+  longPressTimer = null;
+});
+
+map.on("touchend", "walk-points", () => {
+  clearTimeout(longPressTimer);
+  longPressTimer = null;
+
+  // If it was a long-press, keep popup until next tap elsewhere
+  // If it was NOT a long-press, let your normal tap-select logic run as usual
+});
+
+// tap anywhere else closes the popup
+map.on("touchstart", (e) => {
+  if (!window.matchMedia("(max-width: 768px)").matches) return;
+
+  // if tap wasn't on walk-points, clear popup + table highlight
+  const hits = map.queryRenderedFeatures(e.point, { layers: ["walk-points"] });
+  if (!hits.length) {
+    hoverPopup.remove();
+    document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+  }
+});
         map.on('mouseenter', 'walk-points', (e) => {
   map.getCanvas().style.cursor = 'pointer';
   const feature = e.features[0];
@@ -1804,11 +1915,8 @@ map.on('mouseleave', 'walk-points', (e) => {
             zoomToParkName(selectedParkName);
 
             // Lock panning to this park's route perimeter (with a margin)
-const pb = getRouteBoundsForWalkIds(parkWalkIdsAll.length ? parkWalkIdsAll : parkWalkIds);
-if (pb) {
-    map.setMaxBounds(expandBounds(pb, 0.12));
-    map.setMinZoom(map.getZoom()); // prevent zooming out too far while in park
-}
+            const pb = getRouteBoundsForWalkIds(parkWalkIdsAll.length ? parkWalkIdsAll : parkWalkIds);
+
             // show the back button
             showBackToAllWalksBtn(true);
             showBackToParkBtn(false);
@@ -1936,7 +2044,8 @@ if (pb) {
             minLength, maxLength,
             Difficulty: document.querySelector('input[name="difficultyRadio"]:checked')?.value || "all",
             counties,
-            poiTypes
+            poiTypes,
+            nameQuery: (document.getElementById("nameSearchInput")?.value || "").trim().toLowerCase()
         };
     }
 
@@ -2057,6 +2166,19 @@ if (pb) {
         if (poiMatchIds instanceof Set) {
             filter.push(["in", ["to-number", ["get", "walkid"]], ["literal", [...poiMatchIds]]]);
         }
+        // === [NAME-SEARCH-FILTER-01] ===
+        if (state.nameQuery) {
+            const q = state.nameQuery;
+
+            const NAME_EXPR = ["downcase", ["to-string", ["coalesce", ["get","name"], ""]]];
+
+            // PARK_EXPR already exists in this function (you defined it above)
+            filter.push([
+                "any",
+                ["in", q, NAME_EXPR],
+                ["in", q, PARK_EXPR]
+            ]);
+        }
 
         return filter;
     }
@@ -2119,9 +2241,8 @@ if (pb) {
             
             zoomToParkName(selectedParkName, true);
             map.once("moveend", () => {
-                const rb = getRouteBoundsForWalkIds(parkWalkIdsAll);
-                if (rb) map.setMaxBounds(expandBounds(rb, 0.12));
-                map.setMinZoom(map.getZoom());
+            const rb = getRouteBoundsForWalk(selectedWalkId);
+            lockToBounds(rb, 0.25, 0.8); 
                 });
             return;
         }
@@ -2168,7 +2289,7 @@ if (pb) {
         const features = allWalkFeatures();
         // ✅ If a park is selected, table must only show walks in that park
         const parkLower = selectedParkName ? selectedParkName.trim().toLowerCase() : null;
-
+        const nameQuery = (document.getElementById("nameSearchInput")?.value || "").trim().toLowerCase();
         const seen = new Set();
         const out = [];
 
@@ -2254,6 +2375,11 @@ if (pb) {
                 if (chosenParks.length > 0 && !chosenParks.includes(park)) continue;
             }
 
+            if (nameQuery) {
+                const n = String(f.properties.name || "").trim().toLowerCase();
+                const p = getWalkParkName(f.properties).trim().toLowerCase();
+                if (!n.includes(nameQuery) && !p.includes(nameQuery)) continue;
+                }
             out.push(f);
         }
 
@@ -2600,11 +2726,8 @@ if (!selectedParkName) {
   zoomToRoute(selectedWalkId);
 
   map.once("moveend", () => {
-    const rb = getRouteBoundsForWalk(selectedWalkId);
-    if (rb) map.setMaxBounds(expandBounds(rb, 0.12));
-
-    // Prevent zooming out too far while a walk is selected
-    map.setMinZoom(map.getZoom());
+    const rb = getRouteBoundsForWalkIds(parkWalkIdsAll);
+    lockToBounds(rb, 0.25, 0.8);  // bigger perimeter + small zoom-out wiggle
   });
 } else {
   // Park mode: DO NOT lock to the walk (keep the park bounds lock)
@@ -2845,6 +2968,15 @@ if (!selectedParkName) {
         map.flyTo({ center: v.center, zoom: v.zoom });
 
     }
+
+    // === [NAME-SEARCH-LISTENER-01] ===
+const nameSearchInput = document.getElementById("nameSearchInput");
+    if (nameSearchInput) {
+    nameSearchInput.addEventListener("input", () => {
+        applyAllFilters();
+        updateWalkTable();
+    });
+}
 
     // (1) POI AND logic also drives filtering (and selected-walk POIs)
     document.querySelectorAll('#poiDropdown input').forEach(cb => cb.onchange = () => {
