@@ -1421,7 +1421,7 @@ map.setPaintProperty("walk-routes-casing", "line-width", [
             const box = document.getElementById("viewBox");
             if (!box || !map) return;
             const c = map.getCenter();
-            box.value = `center ${c.lng.toFixed(5)},${c.lat.toFixed(5)} | zoom ${map.getzoom() -0.9.toFixed(2)}`;
+            box.value = `center ${c.lng.toFixed(5)},${c.lat.toFixed(5)} | zoom ${map.getZoom().toFixed(2)}`;
             }
 
     // map.on('style.load', () => {
@@ -1792,7 +1792,7 @@ map.on('mouseleave', 'walk-points', (e) => {
             // save list view (so we can go back)
             if (!selectedParkName && !selectedWalkId) {
                 const c = map.getCenter();
-                lastListView = { center: [c.lng, c.lat], zoom: map.getzoom() -0.9 };
+                lastListView = { center: [c.lng, c.lat], zoom: map.getZoom() };
             }
 
             selectedParkName = String(f.properties.parkName).trim();
@@ -1807,7 +1807,7 @@ map.on('mouseleave', 'walk-points', (e) => {
 const pb = getRouteBoundsForWalkIds(parkWalkIdsAll.length ? parkWalkIdsAll : parkWalkIds);
 if (pb) {
     map.setMaxBounds(expandBounds(pb, 0.12));
-    map.setMinZoom(map.getzoom() -0.9); // prevent zooming out too far while in park
+    map.setMinZoom(map.getZoom()); // prevent zooming out too far while in park
 }
             // show the back button
             showBackToAllWalksBtn(true);
@@ -2121,7 +2121,7 @@ if (pb) {
             map.once("moveend", () => {
                 const rb = getRouteBoundsForWalkIds(parkWalkIdsAll);
                 if (rb) map.setMaxBounds(expandBounds(rb, 0.12));
-                map.setMinZoom(map.getzoom() -0.9);
+                map.setMinZoom(map.getZoom());
                 });
             return;
         }
@@ -2433,7 +2433,7 @@ if (pb) {
         // Only apply hiding when a WALK is selected
         if (!selectedWalkId) return;
 
-        const z = map.getzoom() -0.9;
+        const z = map.getZoom();
         if (z < POI_HIDE_ZOOM_SELECTED){
             setFilterSafe('poi-icons', ['==', ['to-number',['get','walkid']], -1]);
         } else {
@@ -2467,7 +2467,7 @@ function applyPOIFilterForSelectedWalk() {
         if (!selectedWalkId) {
             lastListState = getFilterState();
             const c = map.getCenter();
-            lastListView = { center: [c.lng, c.lat], zoom: map.getzoom() -0.9 };
+            lastListView = { center: [c.lng, c.lat], zoom: map.getZoom() };
         }
 
         const props = feature.properties || {};
@@ -2604,7 +2604,7 @@ if (!selectedParkName) {
     if (rb) map.setMaxBounds(expandBounds(rb, 0.12));
 
     // Prevent zooming out too far while a walk is selected
-    map.setMinZoom(map.getzoom() -0.9);
+    map.setMinZoom(map.getZoom());
   });
 } else {
   // Park mode: DO NOT lock to the walk (keep the park bounds lock)
