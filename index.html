@@ -58,6 +58,37 @@
             color:var(--secondary);
             background:#fff;
             }
+
+            /* Find Walk Step 2 boxes */
+.fwChoiceBox{
+  border:1px solid rgba(0,0,0,0.12);
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+  box-shadow:0 8px 18px rgba(0,0,0,0.08);
+  margin:10px 0;
+  position:relative;
+}
+
+.fwChoiceBox h4{
+  margin:0 0 10px;
+  font-size:14px;
+  font-weight:900;
+}
+
+.fwChoiceBox.isDisabled{
+  opacity:1;                 /* keep readable */
+}
+
+.fwChoiceBox.isDisabled::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(180,180,180,0.35);
+  border-radius:14px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.10);
+  pointer-events:none;       /* overlay only */
+}
         #topSearch:focus{
             outline:none;
             border-color: var(--primary);
@@ -83,14 +114,29 @@
             border-radius:8px;padding:0 8px;font-size:12px;font-weight:600;
         }
         th.search-open .thSearch{ display:block; }
+/* === [NO-PAGE-SCROLL-DESKTOP-01] === */
+html, body{
+  height:100%;
+  margin:0;
+  overflow:hidden; /* page never scrolls */
+}
 
+/* ensure flex children can scroll internally */
+#panel{ min-height:0; }
+#walkTableContainer{ min-height:0; overflow:auto; }
         /* Top filters bar (desktop default) */
         #filters{
             background: var(--brandGradient);
             display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);
         }
         #filters label{ color:#1f3342;letter-spacing:.2px;font-size:13px;font-weight:600;white-space:nowrap; }
-
+        #statusStack{
+        position:absolute;
+        right:12px;
+        bottom:12px;
+        z-index:80;
+        pointer-events:auto;
+        }
         .filterGroup{
             display:flex;flex-direction:column;gap:6px;padding:6px 10px;border:1px solid #eef2f5;
             background:#ffffff;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,0.03);
@@ -102,7 +148,7 @@
             gap:12px;
             justify-content:center;
             align-items:center;
-            padding:14px 0 4px;
+            padding:8px 0 4px;
             border-top:1px solid var(--border);
             margin-top:10px;
         }
@@ -289,7 +335,18 @@
         }
 
         #panelToggleBtn:hover{filter:brightness(.95)}
-
+        #findWalkBtn{
+            background:#fff;
+            color:var(--secondary);
+            border:1px solid var(--border);
+            padding:7px 12px;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:13px;
+            font-weight:600;
+            white-space:nowrap;
+            box-shadow:none;
+        }
         .actionRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:12px 0 14px}
         .actionBtn{
             display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:170px;
@@ -327,7 +384,7 @@
         #walkTable tbody tr.rowHover{
             outline: 2px solid rgba(255,255,255,0.9);
             outline-offset: -2px;
-            background-color: #c0c0c2;
+            background-color: #919192;
             }
         .walkInfoGrid{
                     display:grid;
@@ -386,7 +443,7 @@
             .actionRow{ gap:10px; margin:10px 0 12px; }
             .actionBtn{ min-width:0; width:100%; padding:10px 12px; font-size:12px; border-radius:14px; }
 
-
+            #statusStack{ display:none !important; }
             #backToParkBtn{
                 left:12px;
                 top:104px;
@@ -408,9 +465,12 @@
     left: 12px;
   }
 }
- #walkTable th:hover{filter:brightness(.85);} 
+
+        #walkTable th:hover{filter:brightness(.25);} 
         #walkTable tbody tr:hover{background:var(--bg-light)}
-        
+        #walkTable tbody tr.rowHover{
+            background: var(--bg-light);
+            }
         #walkTable th{user-select:none;cursor:pointer;position:sticky;top:0;font-size:12px;z-index:61}
         .th-sort-indicator{font-size:11px;opacity:.75;margin-left:6px}
         #walkTableContainer{ flex:1; overflow:auto; }
@@ -432,7 +492,17 @@
            MOBILE (single source of truth)
            ========================= */
         @media (max-width: 768px){
-
+            /* Stack slider rows vertically on mobile */
+            .rangeRow{
+            flex-direction: column !important;
+            align-items: stretch !important;
+            }
+            .rangeRow .miniInput{
+            width: 100%!important;
+            }
+           .rangeRow .slider{
+            width: 100% !important;
+            }
             /* Top bar layout */
             #filters{
                 display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -447,6 +517,19 @@
                 font-size: 12px;
                 height: 32px;
                 }
+
+                html, body{
+                height:100%;
+                overflow:hidden;
+                }
+
+                #appWrap{
+                height: calc(100vh - 60px); /* top bar approx */
+                }
+
+                #map{
+                height: calc(100vh - 60px);
+                }
             /* Show filters button on mobile */
             #mobileFiltersToggle{
                 display:inline-flex !important;
@@ -455,6 +538,9 @@
                 pointer-events:auto;
                 border-color: rgba(255,255,255,0.35);
             }
+            #topSearch{ order: 1; }
+            #findWalkBtn{ order: 2; margin: 0; }
+            #mobileFiltersToggle{ order: 3; }
 
             /* Base: hide inner until modal open */
             #filtersInner{
@@ -518,7 +604,24 @@
                 z-index: 9000001 !important;
             }
             /* === [PARK-HOVER-CSS-01] === */
+            /* Default: popups should not steal map hover/clicks */
             .mapboxgl-popup { pointer-events: none; }
+
+            /* But: the walk hover popup should be clickable */
+            .mapboxgl-popup.clickableWalkPopup,
+            .mapboxgl-popup.clickableWalkPopup * {
+            pointer-events: auto;
+            }
+
+            .walkPopupBtn{
+            all: unset;
+            display:block;
+            cursor:pointer;
+            font-family: Manrope, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            font-size: 12px;
+            line-height: 1.2;
+            }
+            .walkPopupBtn:active{ transform: translateY(1px); }
 
             .slider{ width:100%; }
             .miniInput{ width:48px; height:26px; font-size:12px; padding:0 6px; }
@@ -621,6 +724,16 @@
                 background:#dfe7e5;
                 margin:8px auto 0;
             }
+            /* Find Walk modal: smaller type on mobile */
+            .fwModal h3{ font-size:14px !important; }
+            .fwModal div, .fwModal label, .fwModal input, .fwModal select{
+            font-size:12px !important;
+            }
+            .fwModal .actionBtn{
+            font-size:12px !important;
+            padding:9px 10px !important;
+            min-width:120px;
+            }
 
             #panelToggleBtn{ display:none; }
 
@@ -633,6 +746,34 @@
             .walkInfoTable{ font-size:11px; }
             .walkInfoTable th, .walkInfoTable td{ padding:6px 8px; }
         }
+        /* === Clickable walk hover popup === */
+        .clickableWalkPopup .mapboxgl-popup-content{
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 0;
+        border-radius: 12px;
+         max-width: 260px;
+        overflow-wrap: break-word;
+        white-space: normal;
+        }
+        .clickableWalkPopup .mapboxgl-popup-content{
+       
+        overflow: hidden;
+        }
+
+        .walkPopupBtn div{
+        overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+        }
+        .walkPopupBtn{
+        all: unset;
+        display: block;
+        width: 100%;
+        padding: 10px 12px;
+        cursor: pointer;
+        }
+        .walkPopupBtn:active{ transform: scale(0.99); }
         /*may have to remove for licancing*/
         .mapboxgl-ctrl-logo{ display:none !important; }
         .mapboxgl-ctrl-attrib{ display:none !important; }
@@ -650,31 +791,52 @@
     <button id="mobileFiltersToggle" type="button" aria-expanded="false" onclick="toggleMobileFilters()">
         ☰ Filters
     </button>
+    <div id="filtersInner">
 
-<!-- NAME / PARK SEARCH -->
-<div class="filterGroup" id="nameSearchGroup">
-  <label>Search (walk / park)</label>
-  <input id="nameSearchInput" class="dd-search" type="text" placeholder="Type a walk or park name…">
+    <div class="dropdown" id="slidersDropdown">
+  <button id="slidersBtn" type="button" onclick="toggleDropdown('slidersDropdown')">
+    Distance / Length / Incline
+  </button>
+<div class="filterGroup" id="unitGroup"style="display:none;">
+  <label>Units</label>
+  <select id="unitSelect">
+    <option value="KM">Kilometres (km)</option>
+    <option value="MI">Miles (mi)</option>
+    <option value="M">Metres (m)</option>
+    <option value="YD">Yards (yd)</option>
+  </select>
 </div>
-        <!-- INCLINE GROUP -->
-        <div class="filterGroup" id="inclineGroup">
-            <label>Incline (m)</label>
-            <div class="rangeRow">
-                <input id="inclineMinInput" class="miniInput" inputmode="numeric" value="0">
-                <div id="inclineSlider" class="slider"></div>
-                <input id="inclineMaxInput" class="miniInput" inputmode="numeric" value="5000">
-            </div>
-        </div>
+  <div class="dropdown-content" style="padding:12px; min-width: 320px;">
+    <!-- DISTANCE GROUP (hidden until location allowed) -->
+    <div class="filterGroup" id="distanceGroup" style="display:none;">
+      <label>Distance from you (km)</label>
+      <div class="rangeRow">
+        <input id="distanceMaxInput" class="miniInput" inputmode="numeric" value="5000">
+        <div id="distanceSlider" class="slider"></div>
+      </div>
+    </div>
 
-        <!-- LENGTH GROUP -->
-        <div class="filterGroup" id="lengthGroup">
-            <label>Length (km)</label>
-            <div class="rangeRow">
-                <input id="lengthMinInput" class="miniInput" inputmode="numeric" value="0">
-                <div id="lengthSlider" class="slider"></div>
-                <input id="lengthMaxInput" class="miniInput" inputmode="numeric" value="200">
-            </div>
-        </div>
+    <!-- LENGTH GROUP -->
+    <div class="filterGroup" id="lengthGroup">
+      <label>Length (km)</label>
+      <div class="rangeRow">
+        <input id="lengthMinInput" class="miniInput" inputmode="numeric" value="0">
+        <div id="lengthSlider" class="slider"></div>
+        <input id="lengthMaxInput" class="miniInput" inputmode="numeric" value="200">
+      </div>
+    </div>
+
+    <!-- INCLINE GROUP -->
+    <div class="filterGroup" id="inclineGroup">
+      <label>Incline (m)</label>
+      <div class="rangeRow">
+        <input id="inclineMinInput" class="miniInput" inputmode="numeric" value="0">
+        <div id="inclineSlider" class="slider"></div>
+        <input id="inclineMaxInput" class="miniInput" inputmode="numeric" value="5000">
+      </div>
+    </div>
+  </div>
+</div>
 
 
         <div class="dropdown" id="difficultyDropdown">
@@ -758,13 +920,21 @@
             <label><input type="checkbox" value="River"> River</label>
             <label><input type="checkbox" value="Woods"> Woods</label>
             <label><input type="checkbox" value="Beach"> Beach</label>
+            <label><input type="checkbox" value="Harbour"> Harbour</label>
+            <label><input type="checkbox" value="Pond"> Pond</label>
+            <label><input type="checkbox" value="Waterfall"> Waterfall</label>
             <label><input type="checkbox" value="Castle"> Castle</label>
             <label><input type="checkbox" value="Church"> Church</label>
             <label><input type="checkbox" value="Heratage Site"> Heritage Site</label>
 
         </div>
     </div>
-        <button id="clearFiltersBtn" type="button" onclick="clearAllFilters()">Clear filters</button>
+
+            <button id="clearFiltersBtn" type="button" onclick="clearAllFilters()">Clear filters</button>
+
+            <button id="findWalkBtn" type="button" onclick="openFindWalk()">
+                 Find your walk
+            </button>
         <div id="statusStack">
   <input id="clickCoordsBox" class="statusBox" type="text" readonly value="Click map → lng,lat">
   <input id="viewBox" class="statusBox" type="text" readonly value="center / zoom">
@@ -884,6 +1054,135 @@
     let WALKS_DATA = null;
     let ROUTES_DATA = null;
     let POIS_DATA = null;
+    async function ensureGeoPermissionOrExplain(){
+  try{
+    if (!navigator.permissions?.query) return true; // older Safari: just try and handle error
+    const status = await navigator.permissions.query({ name: "geolocation" });
+
+    if (status.state === "denied"){
+      alert(
+        "Location permission is blocked in your browser.\n\n" +
+        "To enable it:\n" +
+        "• Click the padlock icon beside the address bar\n" +
+        "• Set Location to Allow\n" +
+        "• Refresh the page\n\n" +
+        "Once it's allowed, click 'Use my location' again."
+      );
+      return false;
+    }
+    return true;
+  }catch(e){
+    return true;
+  }
+}
+// ============================
+// USER LOCATION + DISTANCE FILTER
+// ============================
+let USER_LOC = null;              // { lng, lat }
+let USER_MARKER = null;           // mapboxgl.Marker
+let DIST_MAX_KM = Infinity;        // meters (Infinity means "no distance filter")
+
+function haversineMeters(aLng, aLat, bLng, bLat){
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const s1 = Math.sin(dLat/2);
+  const s2 = Math.sin(dLng/2);
+  const aa = s1*s1 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * s2*s2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(aa)));
+}
+function getWalkIdsWithinDistance(state){
+  if (!USER_LOC || !Number.isFinite(state.maxDistanceM)) return null;
+
+  const feats = allWalkFeatures();
+  const ids = [];
+
+  for (const f of feats){
+    if (f.geometry?.type !== "Point") continue;
+    const [lng, lat] = f.geometry.coordinates;
+    const d = haversineMeters(USER_LOC.lng, USER_LOC.lat, lng, lat);
+    if (d <= state.maxDistanceM) ids.push(Number(f.properties.walkid));
+  }
+
+  return ids; // array
+}
+function showUserMarker(){
+  if (!USER_LOC || !mapLoaded) return;
+
+  if (USER_MARKER) USER_MARKER.remove();
+
+  const el = document.createElement("div");
+  el.style.width = "10px";
+  el.style.height = "10px";
+  el.style.borderRadius = "999px";
+  el.style.background = "#111111";
+  el.style.border = "2px solid #ffffff";
+  el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.25)";
+
+  USER_MARKER = new mapboxgl.Marker({ element: el })
+    .setLngLat([USER_LOC.lng, USER_LOC.lat])
+    .addTo(map);
+}
+
+function showDistanceUI(){
+  const group = document.getElementById("distanceGroup");
+  if (group) group.style.display = "flex";
+}
+
+// init noUi distance slider (only after DOM exists)
+function initDistanceSlider(){
+  const slider = document.getElementById("distanceSlider");
+  const input  = document.getElementById("distanceMaxInput");
+  if (!slider || !input) return;
+
+  if (slider.noUiSlider) return; // don’t double-init
+
+  noUiSlider.create(slider, {
+    start: [500],
+    connect: [true, false],
+    range: { min: 0, max: 500 },   // 0–500 km
+    step: 1
+  });
+
+  function sync(){
+    const km = Math.round(Number(slider.noUiSlider.get()));
+    input.value = km;
+    DIST_MAX_KM = km <= 0 ? 0 : km;
+    applyAllFilters();
+    updateWalkTable();
+  }
+
+  slider.noUiSlider.on("update", sync);
+
+  input.addEventListener("change", () => {
+    let km = Number(input.value);
+    if (Number.isNaN(km)) km = 500;
+    km = Math.max(0, Math.min(500, km));
+    slider.noUiSlider.set([km]);
+  });
+}
+
+function requestUserLocationOnLoad(){
+  if (!navigator.geolocation) return;
+
+  // Ask immediately on load
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      USER_LOC = { lng: pos.coords.longitude, lat: pos.coords.latitude };
+      showDistanceUI();
+      initDistanceSlider();
+      showUserMarker();
+      applyAllFilters();
+      updateWalkTable();
+    },
+    (err) => {
+      // user denied or error → no distance filter shown
+      console.log("Geolocation denied/unavailable:", err?.message);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
 
     async function fetchJson(url){
         const res = await fetch(url, { cache: 'no-cache' });
@@ -900,18 +1199,32 @@
         if (ROUTES_DATA && Array.isArray(ROUTES_DATA.features)) return ROUTES_DATA.features;
         try { return mapLoaded ? map.querySourceFeatures('routes') : []; } catch(e){ return []; }
     }
-    const DEFAULT_MAX_BOUNDS = [[-13.5, 50.3], [-3.5, 56.6]];
-const DEFAULT_MIN_ZOOM = 4.0;
+
 
 function expandBounds(bounds, padRatio = 0.06) {
-    const sw = bounds.getSouthWest();
-    const ne = bounds.getNorthEast();
-    const dx = (ne.lng - sw.lng) * padRatio;
-    const dy = (ne.lat - sw.lat) * padRatio;
-    return [
-        [sw.lng - dx, sw.lat - dy],
-        [ne.lng + dx, ne.lat + dy]
-    ];
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  const dx = (ne.lng - sw.lng) * padRatio;
+  const dy = (ne.lat - sw.lat) * padRatio;
+  return [
+    [sw.lng - dx, sw.lat - dy],
+    [ne.lng + dx, ne.lat + dy]
+  ];
+}
+
+const DEFAULT_MAX_BOUNDS = [[-13.5, 50.3], [-3.5, 56.6]];
+const DEFAULT_MIN_ZOOM = 4.0;
+
+function clearDynamicMapLocks(){
+  map.setMaxBounds(DEFAULT_MAX_BOUNDS);
+  map.setMinZoom(DEFAULT_MIN_ZOOM); // keep your normal baseline
+}
+
+// Lock panning only (NO dynamic minZoom). This prevents “can’t zoom out” traps.
+function lockToBounds(bounds, padRatio = 0.25){
+  if (!bounds) return;
+  map.setMaxBounds(expandBounds(bounds, padRatio));
+  // NOTE: no setMinZoom here
 }
 
 function getRouteBoundsForWalk(walkId) {
@@ -967,21 +1280,7 @@ function getRouteBoundsForWalkIds(walkIds) {
     return found ? b : null;
 }
 
-function clearDynamicMapLocks(){
-    map.setMaxBounds(DEFAULT_MAX_BOUNDS);
-  //  map.setMinZoom(DEFAULT_MIN_ZOOM);
-}
-// Lock map to a bounds perimeter, but allow a little zoom-out wiggle
-function lockToBounds(bounds, padRatio = 0.25, zoomOutWiggle = 0.8){
-    if (!bounds) return;
 
-    map.setMaxBounds(expandBounds(bounds, padRatio));
-
-    // Allow user to zoom out slightly without snapping back in
-    const z = map.getZoom();
-    const minZ = Math.max(DEFAULT_MIN_ZOOM, z - zoomOutWiggle);
-    map.setMinZoom(minZ);
-}
     function allPoiFeatures(){
         if (POIS_DATA && Array.isArray(POIS_DATA.features)) return POIS_DATA.features;
         try { return mapLoaded ? map.querySourceFeatures('pois') : []; } catch(e){ return []; }
@@ -994,7 +1293,7 @@ function lockToBounds(bounds, padRatio = 0.25, zoomOutWiggle = 0.8){
     }
         const IRELAND_VIEW_DESKTOP = { center: [-8.2, 53.4], zoom: 6.2 };
     const IRELAND_VIEW_MOBILE  = { center: [-8.2, 53.4], zoom: 5.8 };
-const v = getIrelandView();
+
  function getIrelandView(){
         return window.matchMedia("(max-width: 768px)").matches ? IRELAND_VIEW_MOBILE : IRELAND_VIEW_DESKTOP;
     }
@@ -1112,7 +1411,7 @@ map.on('style.load', hideNonRoadLabels);
 
         // Clear selected-only layers (selection highlight)
         map.setFilter("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
-
+        selectedWalkId = null;
         // Re-apply park drill filters
         applyAllFilters();
 
@@ -1153,7 +1452,7 @@ map.on('style.load', hideNonRoadLabels);
 
         // Zoom back out but keep filters as they are
       // Zoom back out
-
+const v = getIrelandView();
 
 // If we were in a park drill-in, ALWAYS go back to the max zoom-out view
 if (wasInPark) {
@@ -1475,9 +1774,50 @@ map.setPaintProperty("walk-routes-casing", "line-width", [
     // map.on('style.load', () => {
 //     hideBaseMapLabelsAndRoads();
 // });
+// === [STICKY-HOVER-GLOBAL-01] ===
+// Make these global so selectWalkById() can call clearStickyHoverAll() safely.
+let hoverPopup = null;
+let parkPopup = null;
+
+// Sticky hover state (keeps highlight until another hover or mouse leaves map)
+let STICKY_HOVER_WALK_ID = null;
+let STICKY_HOVER_PARK_NAME = null;
+
+// Clears BOTH hover states so only one thing can be highlighted at a time
+function clearStickyHoverAll(){
+  STICKY_HOVER_WALK_ID = null;
+  STICKY_HOVER_PARK_NAME = null;
+
+  try{
+    setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+    setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+  }catch(e){}
+
+  try{ if (hoverPopup) hoverPopup.remove(); }catch(e){}
+  try{ if (parkPopup) parkPopup.remove(); }catch(e){}
+  try{ if (routePopup) routePopup.remove(); }catch(e){}
+
+  document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+  highlightParkRows(null, false);
+}
+function setTableRowHover(walkId, on){
+  const tbody = document.querySelector("#walkTable tbody");
+  if (!tbody) return;
+
+  // only one highlighted row at a time
+  tbody.querySelectorAll("tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+
+  if (!on) return;
+
+  const tr = tbody.querySelector(`tr[data-walkid="${Number(walkId)}"]`);
+  if (tr) tr.classList.add("rowHover");
+}
 map.on('load', async () => {
         mapLoaded = true;
-
+map.on("styleimagemissing", function(e) {
+  console.warn("[POI ICON MISSING FROM STYLE]:", e.id);
+});
         // Load GeoJSON once and reuse for filtering/parks (prevents parks disappearing at different zoom levels)
         try {
             [WALKS_DATA, ROUTES_DATA, POIS_DATA] = await Promise.all([
@@ -1548,12 +1888,29 @@ map.on("mousemove", "park-points", (e) => {
   if (!f) return;
 
   const parkName = f.properties?.parkName;
-  highlightParkRows(parkName, true);
+  const coords = f.geometry?.coordinates;
+  setStickyParkHover(parkName, coords);
+});
+map.on("mousemove", "walk-points", (e) => {
+  const feature = pickNearestWalkFeature(e, 28) || e.features?.[0];
+  const wid = Number(feature?.properties?.walkid);
+  if (!wid) return;
+
+  setStickyWalkHover(wid);
+
+  if (typeof showWalkHoverPopup === "function") {
+    showWalkHoverPopup(wid, e.lngLat);
+    attachPopupHoverLock(hoverPopup);
+  }
 });
 
-map.on("mouseleave", "park-points", () => {
+map.on("mouseleave", "walk-points", () => {
+  // IMPORTANT: do NOT clear here — keep it sticky until mouse leaves the map
   map.getCanvas().style.cursor = "";
-  highlightParkRows(null, false);
+});
+map.on("mouseleave", "park-points", () => {
+  // IMPORTANT: do NOT clear here — keep it sticky until mouse leaves the map
+  map.getCanvas().style.cursor = "";
 });
 // === [MOBILE-TAP-01] ===
         map.on("touchstart", () => {
@@ -1602,36 +1959,52 @@ map.on("mouseleave", "park-points", () => {
             }
         });
         const routePopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false });
+        let IS_HOVERING_POPUP = false;
+
+function attachPopupHoverLock(popup){
+  const el = popup.getElement?.();
+  if (!el) return;
+  el.addEventListener("mouseenter", () => { IS_HOVERING_POPUP = true; });
+  el.addEventListener("mouseleave", () => { 
+    IS_HOVERING_POPUP = false; 
+   const stillInsideMap = map?.getContainer?.().matches?.(":hover");
+    if (!stillInsideMap) {
+      clearStickyHoverAll();
+    }
+  });
+}
 
     function clearRouteHover(){
   setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
   routePopup.remove();
 
-  // remove any lingering row highlight
-  document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+  // IMPORTANT:
+  // Do NOT clear the table row here.
+  // Sticky hover should remain until another hover OR the mouse leaves the map.
 }
 
-        map.on("mousemove", "walk-routes", (e) => {
+       map.on("mousemove", "walk-routes", (e) => {
   const wid = Number(e.features?.[0]?.properties?.walkid);
   if (!wid) return;
 
-  // If we are in a park AND a walk is selected, keep the selected highlight.
   if (selectedParkName && selectedWalkId) {
-    // optional: still show popup text
     routePopup
       .setLngLat(e.lngLat)
       .setHTML(`<strong>${getWalkNameById(wid)}</strong>`)
       .addTo(map);
+    attachPopupHoverLock(routePopup);
     return;
   }
 
-  // Normal hover behaviour when NOT locked to a selected walk
   setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], wid]);
-setTableRowHover(wid, true);
+  setStickyWalkHover(wid);
+
   routePopup
     .setLngLat(e.lngLat)
     .setHTML(`<strong>${getWalkNameById(wid)}</strong>`)
     .addTo(map);
+
+  attachPopupHoverLock(routePopup);
 });
 map.on("click", (e) => {
   const box = document.getElementById("clickCoordsBox");
@@ -1653,16 +2026,37 @@ map.on("click", (e) => {
             River: 'river',
             Woods: 'woods',
             Beach: 'beach',
+            Harbour: 'harbour',
+            Pond: 'pond',
+            Waterfall: 'waterfall',
             Mountain: 'mountain',
             'Heratage Site': 'heritage',
             'Heritage Site': 'heritage'
         };
 
         Object.entries(poiIcons).forEach(([type, name]) => {
-            map.loadImage(`icons/${name}.png`, (error, image) => {
-                if (error) return console.error(`Error loading icon: ${name}`, error);
-                if (!map.hasImage(name)) map.addImage(name, image, { sdf: false });
-            });
+            
+            const url = `icons/${name}.png`;
+map.loadImage(url, (error, image) => {
+  if (error || !image) {
+    console.group(`[POI ICON LOAD FAIL] ${name}`);
+    console.log("type:", type);
+    console.log("url:", url);
+    console.log("error:", error);
+    console.groupEnd();
+    return;
+  }
+
+  try {
+    if (!map.hasImage(name)) map.addImage(name, image, { sdf: false });
+  } catch (e) {
+    console.group(`[POI ICON ADD FAIL] ${name}`);
+    console.log("type:", type);
+    console.log("url:", url);
+    console.log("exception:", e);
+    console.groupEnd();
+  }
+});
         });
 
         map.addLayer({
@@ -1672,22 +2066,27 @@ map.on("click", (e) => {
             minzoom: 4,
             layout: {
                 'icon-image': [
-                    'match', ['get', 'type'],
-                    'Bathroom', 'bathroom',
-                    'Cafe', 'cafe',
-                    'Car Park', 'car-park',
-                    'Castle', 'castle',
-                    'Church', 'church',
-                    'Lake', 'lake',
-                    'River', 'river',
-                    'Woods', 'woods',
-                    'Beach', 'beach',
-                    'Mountain', 'mountain',
-                    'Heritage', 'heritage', 'Heritage Site', 'heritage', 'Heratage Site', 'heritage',
-                    'dot-11'
-                ],
+                        'match', ['downcase', ['to-string', ['get','type']]],
+                        'bathroom', 'bathroom',
+                        'cafe', 'cafe',
+                        'car park', 'car-park',
+                        'castle', 'castle',
+                        'church', 'church',
+                        'lake', 'lake',
+                        'river', 'river',
+                        'woods', 'woods',
+                        'beach', 'beach',
+                        'harbour', 'harbour',
+                        'pond', 'pond',
+                        'waterfall', 'waterfall',
+                        'mountain', 'mountain',
+                        'heritage', 'heritage',
+                        'heritage site', 'heritage',
+                        'heratage site', 'heritage',
+                        'cafe' // safe fallback (loaded)
+                        ],
                 // POIs shrink with zoom and fully disappear when zoomed far out
-                'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.0, 6, 0.0, 7, 0.10, 9, 0.22, 12, 0.36],
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.0, 6, 0.0, 7, 0.18, 9, 0.32, 12, 0.50],
 
                 // Only show labels when closer in
                 'text-field': ['step', ['zoom'], '', 10, ['get','name']],
@@ -1708,6 +2107,9 @@ map.on("click", (e) => {
                 'text-halo-width': 1
             }
         });
+        map.on("styleimagemissing", (e) => {
+  console.warn("[styleimagemissing]", e?.id);
+});
         map.on('zoom', updatePoiVisibilityForSelection);
         map.on('zoomend', updatePoiVisibilityForSelection);
 // Click certain POIs to open Google Maps directions to that POI (with a confirm prompt)
@@ -1738,7 +2140,124 @@ map.on("click", (e) => {
         map.setFilter('walk-routes-casing', ["==", ["to-number", ["get","walkid"]], -1]);
 
         // Hover popup for walk names only (your own data)
-        const hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, offset:10 });
+// Make it clickable so user can click the popup to select the walk.
+hoverPopup = new mapboxgl.Popup({
+  closeButton:false,
+  closeOnClick:false,
+  offset:10,
+  className: "clickableWalkPopup"
+});
+
+parkPopup = new mapboxgl.Popup({
+  closeButton:false,
+  closeOnClick:false,
+  offset:10,
+  className: "clickableWalkPopup"
+});
+
+
+
+// Sticky hover state (keeps highlight until another hover or mouse leaves map)
+let STICKY_HOVER_WALK_ID = null;
+let STICKY_HOVER_PARK_NAME = null;
+
+function setStickyWalkHover(wid){
+  if (!wid) return;
+
+  if (STICKY_HOVER_PARK_NAME) {
+    STICKY_HOVER_PARK_NAME = null;
+    setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+    try { parkPopup.remove(); } catch(e){}
+    highlightParkRows(null, false);
+  }
+
+  STICKY_HOVER_WALK_ID = Number(wid);
+
+  setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], STICKY_HOVER_WALK_ID]);
+  setTableRowHover(STICKY_HOVER_WALK_ID, true);
+
+  if (selectedParkName){
+    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], STICKY_HOVER_WALK_ID]);
+  }
+}
+
+// NOTE: accept coords so we can anchor popup exactly on the park point
+function setStickyParkHover(parkName, coords){
+  const p = String(parkName || "").trim().toLowerCase();
+  if (!p) return;
+
+  // ensure only ONE sticky highlight at a time
+  if (STICKY_HOVER_WALK_ID !== null) {
+    STICKY_HOVER_WALK_ID = null;
+    setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+    hoverPopup.remove();
+    document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+  }
+
+  STICKY_HOVER_PARK_NAME = p;
+  setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], p]);
+  highlightParkRows(p, true);
+const ids = getParkWalkIdsByName(parkName);
+const list = ids.slice(0, 6).map(id => `<li style="margin:2px 0;">${getWalkNameById(id)}</li>`).join("");
+const more = ids.length > 6 ? `<div style="margin-top:6px; font-weight:800; opacity:.8;">+ ${ids.length-6} more…</div>` : "";
+
+  // sticky clickable popup for park
+  if (coords && Array.isArray(coords)) {
+   parkPopup
+  .setLngLat(coords)
+  .setHTML(`
+    <button type="button" class="walkPopupBtn parkPopupBtn" data-parkname="${p}">
+      <div style="font-weight:900; margin-bottom:6px;">${parkName}</div>
+      <div style="font-weight:800; opacity:.85; margin-bottom:6px;">Walks in this park:</div>
+      <ul style="margin:0 0 6px 16px; padding:0;">${list}</ul>
+      ${more}
+      <div style="margin-top:8px; font-weight:900;">Tap to view park</div>
+    </button>
+  `)
+  .addTo(map);
+  }
+}
+
+function clearStickyHovers(){
+  // clear walk hover
+  if (STICKY_HOVER_WALK_ID !== null){
+    setTableRowHover(STICKY_HOVER_WALK_ID, false);
+  }
+  STICKY_HOVER_WALK_ID = null;
+  setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+  hoverPopup.remove();
+
+  // clear park hover
+  STICKY_HOVER_PARK_NAME = null;
+  setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+  highlightParkRows(null, false);
+
+  // IMPORTANT: remove park popup too (otherwise it can stick)
+  if (typeof parkPopup !== "undefined") parkPopup.remove();
+}
+map.getCanvas().addEventListener("mouseleave", (e) => {
+  const related = e.relatedTarget;
+  if (related && related.closest && related.closest(".mapboxgl-popup")) {
+    return;
+  }
+
+  if (IS_HOVERING_POPUP) return;
+
+  clearStickyHoverAll();
+});
+// when mouse leaves the MAP (not just a dot), clear sticky hover
+map.getContainer().addEventListener("mouseleave", (e) => {
+  const related = e.relatedTarget;
+  if (related && related.closest && related.closest(".mapboxgl-popup")) {
+    return;
+  }
+
+  if (IS_HOVERING_POPUP) return;
+
+  clearStickyHoverAll();
+});
+// Clicking the hover popup selects the walk (same as clicking the dot)
+
         // === [MOBILE-LONGPRESS-POPUP-01] ===
 let longPressTimer = null;
 let longPressActive = false;
@@ -1802,33 +2321,34 @@ map.on("touchstart", (e) => {
     document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
   }
 });
-        map.on('mouseenter', 'walk-points', (e) => {
+  map.on('mouseenter', 'walk-points', (e) => {
   map.getCanvas().style.cursor = 'pointer';
   const feature = e.features[0];
   const p = feature.properties || {};
   const wid = Number(p.walkid);
+  if (!wid) return;
 
-  setTableRowHover(wid, true);
+  // Sticky highlight
+  setStickyWalkHover(wid);
 
+  // Clickable popup content
   hoverPopup.setLngLat(feature.geometry.coordinates)
     .setHTML(`
-      <div style="font-family:Manrope; font-size:12px;">
+      <button type="button" class="walkPopupBtn" data-walkid="${wid}">
         <div style="font-weight:900; margin-bottom:6px;">${p.name || `Walk ${wid}`}</div>
         <div style="display:grid; grid-template-columns:auto auto; gap:6px 10px;">
           <div><strong>Length:</strong></div><div>${p.length_km ?? ""} km</div>
           <div><strong>Incline:</strong></div><div>${p.incline ?? ""} m</div>
         </div>
-      </div>
+        <div style="margin-top:8px; font-weight:800; opacity:.8;">Tap to view</div>
+      </button>
     `)
     .addTo(map);
 });
 
-
 map.on('mouseleave', 'walk-points', (e) => {
   map.getCanvas().style.cursor = '';
-  const wid = Number(e.features?.[0]?.properties?.walkid);
-  if (wid) setTableRowHover(wid, false);
-  hoverPopup.remove();
+
 });
 
         // ✅ CLICK ROUTE TO SELECT WALK (park + normal)
@@ -1847,59 +2367,13 @@ map.on('mouseleave', 'walk-points', (e) => {
         });
 
         // === [PARK-HOVER-01] ===
-        // === [PARK-HOVER-02] ===
-// Robust hover popup: show on mousemove over parks, hide whenever not over parks.
-        const parkHoverPopup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false,
-            offset: 10
-        });
-
-        let parkHoverActive = false;
-
-        map.on("mousemove", (e) => {
-            const hits = map.queryRenderedFeatures(e.point, { layers: ["park-points"] });
-
-            if (!hits.length) {
-                if (parkHoverActive) {
-                    parkHoverPopup.remove();
-                    parkHoverActive = false;
-                    map.getCanvas().style.cursor = "";
-                }
-                return;
-            }
-
-            const f = hits[0];
-            parkHoverActive = true;
-            map.getCanvas().style.cursor = "pointer";
-            parkHoverPopup
-                .setLngLat(f.geometry.coordinates)
-                .setHTML(`<strong>${f.properties.parkName}</strong>`)
-                .addTo(map);
-        });
-
-// Extra safety: if the map is moved/zoomed, remove popup
-        map.on("movestart", () => {
-            parkHoverPopup.remove();
-            parkHoverActive = false;
-        });
-
-
-        map.on("mouseenter", "park-points", (e) => {
-            map.getCanvas().style.cursor = "pointer";
-            const f = e.features?.[0];
-            if (!f) return;
-            parkHoverPopup
-                .setLngLat(f.geometry.coordinates)
-                .setHTML(`<strong>${f.properties.parkName}</strong>`)
-                .addTo(map);
-        });
+        // === [PARK-HOVER-02] ==
 
         // === [PARK-CLICK-01] ===
         map.on("click", "park-points", (e) => {
             const f = e.features?.[0];
             if (!f) return;
-
+            clearStickyHoverAll();
             // save list view (so we can go back)
             if (!selectedParkName && !selectedWalkId) {
                 const c = map.getCenter();
@@ -1921,12 +2395,11 @@ map.on('mouseleave', 'walk-points', (e) => {
             showBackToAllWalksBtn(true);
             showBackToParkBtn(false);
         });
-
-
-        map.on('mouseleave', 'walk-points', () => {
-            map.getCanvas().style.cursor = '';
-            hoverPopup.remove();
+        map.on("mouseleave", () => {
+        clearStickyHoverAll();
         });
+
+      
 
         // Selecting a walk
         map.on('click', 'walk-points', (e) => {
@@ -1934,6 +2407,7 @@ map.on('mouseleave', 'walk-points', (e) => {
             if (!feature) return;
             selectWalkById(feature.properties.walkid);
         });
+        // === Popup click delegation (walk + park) ===
 
 
         // keep table in sync when map is idle (and on filter changes)
@@ -1947,7 +2421,7 @@ map.on('mouseleave', 'walk-points', (e) => {
             applyAllFilters();
         });
 
-
+        
 
         // set initial view based on device
         const v = getIrelandView();
@@ -1958,7 +2432,8 @@ map.on('mouseleave', 'walk-points', (e) => {
         if (backBtn) backBtn.addEventListener("click", backToAllWalks);
         const backParkBtn = document.getElementById("backToParkBtn");
         if (backParkBtn) backParkBtn.addEventListener("click", backToPark);
-
+        // Ask for user location AFTER map is ready
+        requestUserLocationOnLoad();
 
     });
     const inclineMinInput = document.getElementById('inclineMinInput');
@@ -1974,12 +2449,43 @@ map.on('mouseleave', 'walk-points', (e) => {
     noUiSlider.create(inclineSlider, { start:[0,5000], connect:true, range:{min:0,max:5000}, step:50 });
     noUiSlider.create(lengthSlider,  { start:[0,200],   connect:true, range:{min:0,max:200},   step:1  });
     function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+let UI_UNITS = {
+  length: "km",     // km | miles | m | yards
+  incline: "m",     // m | feet | yards
+  distance: "km"    // km | miles | m | yards
+};
 
+function kmTo(ui, km){
+  if (ui === "km") return km;
+  if (ui === "m") return km * 1000;
+  if (ui === "miles") return km * 0.621371;
+  if (ui === "yards") return km * 1093.61;
+  return km;
+}
+function uiToKm(ui, val){
+  if (ui === "km") return val;
+  if (ui === "m") return val / 1000;
+  if (ui === "miles") return val / 0.621371;
+  if (ui === "yards") return val / 1093.61;
+  return val;
+}
+function mTo(ui, m){
+  if (ui === "m") return m;
+  if (ui === "feet") return m * 3.28084;
+  if (ui === "yards") return m * 1.09361;
+  return m;
+}
+function uiToM(ui, val){
+  if (ui === "m") return val;
+  if (ui === "feet") return val / 3.28084;
+  if (ui === "yards") return val / 1.09361;
+  return val;
+}
     function syncInputsFromSliders(){
         const [iMin, iMax] = inclineSlider.noUiSlider.get().map(v => Math.round(Number(v)));
         const [lMin, lMax] = lengthSlider.noUiSlider.get().map(v => Math.round(Number(v)));
 
-        inclineMinInput.value = iMin;
+        inclineMinInput.value = Math.round(mTo(UI_UNITS.incline, iMin));
         inclineMaxInput.value = iMax;
         lengthMinInput.value  = lMin;
         lengthMaxInput.value  = lMax;
@@ -1996,7 +2502,7 @@ map.on('mouseleave', 'walk-points', (e) => {
     });
 
     function applyInputsToIncline(){
-        let min = Number(inclineMinInput.value);
+        let min = uiToM(UI_UNITS.incline, Number(inclineMinInput.value));
         let max = Number(inclineMaxInput.value);
         if (Number.isNaN(min)) min = 0;
         if (Number.isNaN(max)) max = 5000;
@@ -2007,7 +2513,7 @@ map.on('mouseleave', 'walk-points', (e) => {
     }
 
     function applyInputsToLength(){
-        let min = Number(lengthMinInput.value);
+        let min = uiToKm(UI_UNITS.length, Number(lengthMinInput.value))
         let max = Number(lengthMaxInput.value);
         if (Number.isNaN(min)) min = 0;
         if (Number.isNaN(max)) max = 200;
@@ -2045,8 +2551,9 @@ map.on('mouseleave', 'walk-points', (e) => {
             Difficulty: document.querySelector('input[name="difficultyRadio"]:checked')?.value || "all",
             counties,
             poiTypes,
-            nameQuery: (document.getElementById("nameSearchInput")?.value || "").trim().toLowerCase()
-        };
+            nameQuery: (document.getElementById("topSearch")?.value || "").trim().toLowerCase(),
+            maxDistanceKM: (USER_LOC ? DIST_MAX_KM * 1000 : Infinity)
+            };
     }
 
     // (1) POI AND select: returns walkids that contain ALL selected POI types
@@ -2180,6 +2687,9 @@ map.on('mouseleave', 'walk-points', (e) => {
             ]);
         }
 
+            // Distance filter (only when user location exists)
+       
+
         return filter;
     }
 
@@ -2188,7 +2698,7 @@ map.on('mouseleave', 'walk-points', (e) => {
         if (!mapLoaded) return;
 
         // When a single walk is selected, we keep the "selected" view until user backs out
-        if (selectedWalkId) return;
+        if (selectedWalkId && !selectedParkName) return;
 
         const state = getFilterState();
         const baseFilter = buildMapboxFilterFromState(state);
@@ -2209,6 +2719,20 @@ map.on('mouseleave', 'walk-points', (e) => {
 
             // All walk ids in the park (for POIs)
             parkWalkIdsAll = getParkWalkIdsByName(selectedParkName);
+
+            // If user picked a specific walk while in the park drill, show ONLY that walk
+            if (selectedWalkId){
+            setFilterSafe("walk-routes", ["==", ["to-number", ["get","walkid"]], Number(selectedWalkId)]);
+            setFilterSafe("walk-routes-casing", ["==", ["to-number", ["get","walkid"]], Number(selectedWalkId)]);
+            }
+            // If user picked a specific walk inside the park, hide the other park walks
+            if (selectedWalkId) {
+            showBackToParkBtn(true);
+
+            setFilterSafe("walk-routes", ["==", ["to-number", ["get","walkid"]], Number(selectedWalkId)]);
+            setFilterSafe("walk-routes-casing", ["==", ["to-number", ["get","walkid"]], Number(selectedWalkId)]);
+            setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+            }
 
             // Hide walk points when inside a park (routes only)
             map.setLayoutProperty("walk-points", "visibility", "none");
@@ -2240,11 +2764,11 @@ map.on('mouseleave', 'walk-points', (e) => {
             updateWalkTable();
             
             zoomToParkName(selectedParkName, true);
-            map.once("moveend", () => {
-            const rb = getRouteBoundsForWalk(selectedWalkId);
-            lockToBounds(rb, 0.25, 0.8); 
-                });
-            return;
+             map.once("moveend", () => {
+            const rb = getRouteBoundsForWalkIds(parkWalkIdsAll);
+            lockToBounds(rb, 2);
+            }); 
+                return;
         }
 
         // ===== NORMAL LIST MODE =====
@@ -2259,7 +2783,13 @@ map.on('mouseleave', 'walk-points', (e) => {
             ["in", ["to-number", ["get","walkid"]], ["literal", [...visibleParkWalkIds]]]
         ];
 
-        map.setFilter("walk-points", ["all", baseFilter, hideParkWalksExpr]);
+        const distIds = getWalkIdsWithinDistance(state);
+
+        const distExpr = (Array.isArray(distIds))
+        ? ["in", ["to-number", ["get","walkid"]], ["literal", distIds]]
+        : true;
+
+        map.setFilter("walk-points", ["all", baseFilter, distExpr, hideParkWalksExpr]);
 
         // Park points visible
         map.setLayoutProperty("park-points", "visibility", "visible");
@@ -2289,13 +2819,19 @@ map.on('mouseleave', 'walk-points', (e) => {
         const features = allWalkFeatures();
         // ✅ If a park is selected, table must only show walks in that park
         const parkLower = selectedParkName ? selectedParkName.trim().toLowerCase() : null;
-        const nameQuery = (document.getElementById("nameSearchInput")?.value || "").trim().toLowerCase();
+        const nameQuery = state.nameQuery;
         const seen = new Set();
         const out = [];
 
         for (const f of features) {
             const wid = Number(f.properties.walkid);
-            // ✅ Park drill: hide all other walks from the table
+                 // Distance filter (table side)
+            if (USER_LOC && Number.isFinite(state.maxDistanceKM)) {
+            const [lng, lat] = f.geometry.coordinates;
+            const d = haversineMeters(USER_LOC.lng, USER_LOC.lat, lng, lat);
+            if (d > state.maxDistanceKM) continue;
+            }
+                 // ✅ Park drill: hide all other walks from the table
             if (parkLower) {
                 const p = getWalkParkName(f.properties).toLowerCase();
                 if (p !== parkLower) continue;
@@ -2416,7 +2952,17 @@ map.on('mouseleave', 'walk-points', (e) => {
         if (el) el.textContent = arrow;
     }
 
-
+ const columnSearch = {
+        name: "",
+        length_km: "",
+        incline: "",
+        Difficulty: ""
+    };
+    function setTableHover(walkId, on){
+        const row = document.querySelector(`#walkTable tbody tr[data-walkid="${walkId}"]`);
+        if (!row) return;
+        row.classList.toggle("rowHover", !!on);
+        }
     function updateWalkTable() {
         if (!mapLoaded || selectedWalkId) return;
 
@@ -2488,32 +3034,63 @@ map.on('mouseleave', 'walk-points', (e) => {
                 openDirectionsTo(lng, lat);
             });
 
-            tr.addEventListener('mouseenter', () => {
-                if (selectedWalkId) return;
+  tr.addEventListener('mouseenter', () => {
+    if (selectedWalkId) return;
 
-                setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], walkId]);
+    const parkName = getWalkParkName(f.properties).trim().toLowerCase();
 
-                const parkName = getWalkParkName(f.properties).trim().toLowerCase();
-                if (parkName && parkName !== "na"){
-                    setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], parkName]);
-                }
+    // clear any old hover
+    setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+    setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
 
-                if (selectedParkName){
-                    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], walkId]);
-                }
-                });
+    // highlight just this walk dot on the map
+    setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], walkId]);
 
-                tr.addEventListener('mouseleave', () => {
-                setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
-                setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+    // highlight this row in the table
+    document.querySelectorAll("#walkTable tbody tr.rowHover").forEach(tr => tr.classList.remove("rowHover"));
+    tr.classList.add("rowHover");
 
-                if (!selectedWalkId && selectedParkName){
-                    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
-                }
-                });
+    // optional park highlight
+    if (parkName && parkName !== "na") {
+        setFilterSafe(
+            "park-points-hover",
+            ["==", ["downcase", ["to-string", ["get","parkName"]]], parkName]
+        );
+    }
+
+    // if inside a park drill-in, also highlight the route
+    if (selectedParkName) {
+        setFilterSafe(
+            "walk-routes-hover",
+            ["==", ["to-number", ["get","walkid"]], walkId]
+        );
+    }
+});
+
+tr.addEventListener('mouseleave', () => {
+    tr.classList.remove("rowHover");
+    setFilterSafe("walk-points-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+    setFilterSafe("park-points-hover", ["==", ["downcase", ["to-string", ["get","parkName"]]], "__none__"]);
+    setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
+});
 
             tbody.appendChild(tr);
         });
+        // Reapply sticky hover highlight after table rebuild
+if (window.STICKY_HOVER_WALK_ID || window.STICKY_HOVER_PARK_NAME) {
+  document.querySelectorAll('#walkTable tbody tr').forEach(row => {
+    const walkId = row.dataset.walkId;
+    const parkName = row.dataset.parkName;
+
+    if (
+      walkId === window.STICKY_HOVER_WALK_ID ||
+      parkName === window.STICKY_HOVER_PARK_NAME
+    ) {
+      row.classList.add('highlight');
+    }
+  });
+}
     }
     function extractYouTubeId(value){
         if (!value) return "";
@@ -2579,15 +3156,14 @@ function applyPOIFilterForSelectedWalk() {
     }
 
 
-    function isRealValue(v){
-        if (v === null || v === undefined) return false;
-        const s = String(v).trim();
-        return s !== "" && s.toLowerCase() !== "na";
-    }
+  
 
     function selectWalkById(walkId) {
         const feature = getWalkFeatureById(walkId);
         if (!feature) return;
+        clearStickyHoverAll();
+        // When selecting, remove sticky hover ring + popup
+        clearStickyHoverAll();
 
         // Save current list map view so we can restore on "Back to all walks"
         if (!selectedWalkId) {
@@ -2598,6 +3174,17 @@ function applyPOIFilterForSelectedWalk() {
 
         const props = feature.properties || {};
         selectedWalkId = Number(props.walkid);
+        // Zoom to the selected walk route
+        try{
+        const b = getRouteBoundsForWalk(selectedWalkId);
+        if (b){
+            clearDynamicMapLocks();
+            map.fitBounds(b, { padding: 60, maxZoom: 13.5, duration: 800 });
+            lockToBounds(b, 0.25);
+        } else if (feature.geometry?.coordinates){
+            map.flyTo({ center: feature.geometry.coordinates, zoom: 13, essential:true });
+        }
+        }catch(e){}
 
         // show only selected point
         setFilterSafe('walk-points', ['==', 'walkid', selectedWalkId]);
@@ -2605,14 +3192,14 @@ function applyPOIFilterForSelectedWalk() {
         if (selectedParkName) {
             // keep all park routes visible
             setFilterSafe("walk-routes", [
-                "in",
-                ["to-number", ["get","walkid"]],
-                ["literal", parkWalkIds]
+                "==",
+        ["to-number", ["get","walkid"]],
+        Number(selectedWalkId)
             ]);
             setFilterSafe("walk-routes-casing", [
-                "in",
-                ["to-number", ["get","walkid"]],
-                ["literal", parkWalkIds]
+               "==",
+        ["to-number", ["get","walkid"]],
+        Number(selectedWalkId)
             ]);
             setRoutesMultiColour(parkWalkIds);
 
@@ -2623,7 +3210,6 @@ function applyPOIFilterForSelectedWalk() {
             setFilterSafe('walk-routes', ['==', 'walkid', selectedWalkId]);
             setFilterSafe('walk-routes-casing', ['==', 'walkid', selectedWalkId]);
             setFilterSafe("walk-routes-hover", ["==", ["to-number", ["get","walkid"]], -1]);
-            map.setPaintProperty("walk-routes", "line-offset", 0);
              map.setPaintProperty("walk-routes-casing", "line-offset", 0);
             // ✅ not in park mode: don't offset
         try { map.setPaintProperty("walk-routes", "line-offset", 0);
@@ -2722,13 +3308,12 @@ if (isRealValue(entryFee)) fullRows.push({ k:"Entry Fee", v:`${entryFee}`, hi:tr
             iframe.style.display = "none";
         }
 if (!selectedParkName) {
-  // Normal (non-park) walk selection: zoom + lock to walk perimeter
   zoomToRoute(selectedWalkId);
 
   map.once("moveend", () => {
-    const rb = getRouteBoundsForWalkIds(parkWalkIdsAll);
-    lockToBounds(rb, 0.25, 0.8);  // bigger perimeter + small zoom-out wiggle
-  });
+    const rb = getRouteBoundsForWalk(selectedWalkId);
+    lockToBounds(rb, 2);
+  }); 
 } else {
   // Park mode: DO NOT lock to the walk (keep the park bounds lock)
   // (park click/backToPark already sets maxBounds + minZoom)
@@ -2910,17 +3495,19 @@ if (!selectedParkName) {
         });
     });
 
-    document.getElementById('filtersInner').addEventListener('scroll', () => {
-        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el.classList.contains('open')) positionDropdown(id);
-        });
+   const filtersInnerEl = document.getElementById('filtersInner');
+
+if (filtersInnerEl) {
+  filtersInnerEl.addEventListener('scroll', () => {
+    ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains('open')) positionDropdown(id);
     });
+  });
 
-
-    // stops clicks inside the sheet from bubbling weirdly on mobile
-    document.getElementById('filtersInner').addEventListener('click', (e) => e.stopPropagation());
-
+  // stops clicks inside the sheet from bubbling weirdly on mobile
+  filtersInnerEl.addEventListener('click', (e) => e.stopPropagation());
+}
     // Close dropdown if click outside
     document.addEventListener('click', (e) => {
         ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
@@ -2928,7 +3515,31 @@ if (!selectedParkName) {
             if (!el.contains(e.target)) el.classList.remove('open');
         });
     });
+document.addEventListener("click", (e) => {
+  const walkBtn = e.target.closest(".walkPopupBtn[data-walkid]");
+  if (walkBtn) {
+    const wid = Number(walkBtn.getAttribute("data-walkid"));
+    if (wid) selectWalkById(wid);
+    return;
+  }
 
+  const parkBtn = e.target.closest(".parkPopupBtn[data-parkname]");
+  if (parkBtn) {
+    const p = String(parkBtn.getAttribute("data-parkname") || "").trim();
+    if (!p) return;
+
+    // Find the matching park feature and reuse your normal park selection logic:
+    // simplest: trigger the same effects as clicking a park point
+    selectedParkName = p;
+    selectedWalkId = null;
+    clearStickyHoverAll();
+    applyAllFilters();
+    zoomToParkName(selectedParkName);
+
+    showBackToAllWalksBtn(true);
+    showBackToParkBtn(false);
+  }
+});
     // events
 
     document.querySelectorAll('#countyDropdown input').forEach(cb => cb.onchange = () => {
@@ -2970,12 +3581,13 @@ if (!selectedParkName) {
     }
 
     // === [NAME-SEARCH-LISTENER-01] ===
-const nameSearchInput = document.getElementById("nameSearchInput");
-    if (nameSearchInput) {
-    nameSearchInput.addEventListener("input", () => {
-        applyAllFilters();
-        updateWalkTable();
-    });
+// Unified search (walk / park) uses the TOP search bar
+const topSearch = document.getElementById("topSearch");
+if (topSearch) {
+  topSearch.addEventListener("input", () => {
+    applyAllFilters();
+    updateWalkTable();
+  });
 }
 
     // (1) POI AND logic also drives filtering (and selected-walk POIs)
@@ -3008,12 +3620,7 @@ const nameSearchInput = document.getElementById("nameSearchInput");
     // TABLE SORTING + HEADER SEARCH
     // ------------------------------
 
-    const columnSearch = {
-        name: "",
-        length_km: "",
-        incline: "",
-        Difficulty: ""
-    };
+   
   let lastHoverWalkId = null;
 
 function highlightParkRows(parkName, on){
@@ -3253,6 +3860,20 @@ function setTableRowHover(walkId, on) {
                 if (chosenParksLower.length > 0 && !chosenParksLower.includes(parkLower)) return false;
             }
 
+                        // Distance filter must affect park visibility too
+            if (USER_LOC && Number.isFinite(state.maxDistanceKM)) {
+            const [lng, lat] = f.geometry.coordinates;
+            const d = haversineMeters(USER_LOC.lng, USER_LOC.lat, lng, lat);
+            if (d > state.maxDistanceKM) return false;
+            }
+
+            // Name search must also filter parks (otherwise parks still appear)
+            if (state.nameQuery) {
+            const q = state.nameQuery;
+            const walkName = String(p.name || "").trim().toLowerCase();
+            const parkName = String(getWalkParkName(p) || "").trim().toLowerCase();
+            if (!walkName.includes(q) && !parkName.includes(q)) return false;
+            }
             return true;
         }
 
@@ -3446,8 +4067,947 @@ function setTableRowHover(walkId, on) {
         window.addEventListener("touchmove", onMove, {passive:false});
         window.addEventListener("touchend", onUp);
     })();
+// ============================
+// FIND YOUR WALK (questionnaire modal)
+// ============================
+let FW = {
+  userLoc: null,
+  maxTravelKM: 5000,
+  counties: new Set(),
+  lenMin: 0,
+  lenMax: 200,
+  incMin: 0,
+  incMax: 5000,
+  difficulty: "all",
+  pois: new Set()
+};
+const FW_DEFAULTS = {
+  maxTravelKM: 50,
+  lenMin: 0,
+  lenMax: 200,
+  incMin: 0,
+  incMax: 5000,
+  difficulty: ""
+};
 
+function fwStep2HasChanges(){
+
+  const diffSelect = document.getElementById("fwDiffSelect");
+
+  const distanceChanged =
+    FW.distanceMin !== FW_DEFAULTS.distanceMin ||
+    FW.distanceMax !== FW_DEFAULTS.distanceMax;
+
+  const elevationChanged =
+    FW.elevMin !== FW_DEFAULTS.elevMin ||
+    FW.elevMax !== FW_DEFAULTS.elevMax;
+
+  const difficultyChanged =
+    diffSelect && diffSelect.value !== FW_DEFAULTS.difficulty;
+
+  return distanceChanged || elevationChanged || difficultyChanged;
+}
+function fwStep3HasChanges(){
+  return FW.pois && FW.pois.size > 0;
+}
+
+
+
+function openFindWalk(){
+    clearAllFilters();
+  // reset view
+  // Reset questionnaire state fresh each time
+FW.userLoc = null;
+FW.maxTravelKM = FW_DEFAULTS.maxTravelKM;
+FW.counties = new Set();
+
+FW.lenMin = FW_DEFAULTS.lenMin;
+FW.lenMax = FW_DEFAULTS.lenMax;
+FW.incMin = FW_DEFAULTS.incMin;
+FW.incMax = FW_DEFAULTS.incMax;
+FW.difficulty = FW_DEFAULTS.difficulty;
+
+FW.pois = new Set();
+
+FW_DIRTY.step1 = false;
+FW_DIRTY.step2 = false;
+FW_DIRTY.step3 = false;
+fwUpdateNextButtons();
+fwUpdateStep2MutualExclusion();
+  document.getElementById("fwStep1").style.display = "block";
+  document.getElementById("fwStep2").style.display = "none";
+  document.getElementById("fwStep3").style.display = "none";
+  document.getElementById("findWalkModal").style.display = "block";
+
+  // build counties grid from your real county list (so it stays in sync)
+  const fwCountyGrid = document.getElementById("fwCountyGrid");
+  fwCountyGrid.innerHTML = "";
+  document.querySelectorAll("#countyDropdown .dropdown-content input[type='checkbox']").forEach(cb => {
+    const name = cb.value;
+    const id = "fwCounty_" + name.replace(/\W+/g,"_");
+    const wrap = document.createElement("label");
+    wrap.style.display = "flex";
+    wrap.style.gap = "8px";
+    wrap.style.alignItems = "center";
+    wrap.innerHTML = `<input type="checkbox" id="${id}" value="${name}"> ${name}`;
+    fwCountyGrid.appendChild(wrap);
+
+    wrap.querySelector("input").addEventListener("change", (e) => {
+      if (e.target.checked) FW.counties.add(name);
+      else FW.counties.delete(name);
+      fwRecalcDirtyStep1();
+    });
+  });
+
+  // build POI grid from your POI dropdown list (ignore park-name sublist)
+  const fwPoiGrid = document.getElementById("fwPoiGrid");
+  fwPoiGrid.innerHTML = "";
+
+
+const desiredOrder = [
+  "__PARKS__",
+  "__IS_LOOP__",
+  "__GREENWAY__",
+  "__HAS_YT__",
+  "Bathroom",
+  "Car Park",
+  "Cafe",
+  "Heritage Site",
+  "Heratage Site",
+  "Castle",
+  "Church"
+];
+
+// collect POI items from dropdown
+const items = [];
+document.querySelectorAll("#poiDropdown .dropdown-content > label").forEach(label => {
+  const input = label.querySelector("input[type='checkbox']");
+  if (!input) return;
+  items.push({
+    val: input.value,
+    text: label.textContent.trim()
+  });
+});
+
+// order them
+items.sort((a,b) => {
+  const ai = desiredOrder.indexOf(a.val);
+  const bi = desiredOrder.indexOf(b.val);
+  const aRank = ai === -1 ? 999 : ai;
+  const bRank = bi === -1 ? 999 : bi;
+  if (aRank !== bRank) return aRank - bRank;
+  return a.text.localeCompare(b.text);
+});
+
+// render
+items.forEach(({val, text}) => {
+  const id = "fwPoi_" + val.replace(/\W+/g,"_");
+  const wrap = document.createElement("label");
+  wrap.style.display = "flex";
+  wrap.style.gap = "8px";
+  wrap.style.alignItems = "center";
+  wrap.innerHTML = `<input type="checkbox" id="${id}" value="${val}"> ${text}`;
+  fwPoiGrid.appendChild(wrap);
+
+  wrap.querySelector("input").addEventListener("change", (e) => {
+  if (e.target.checked) FW.pois.add(val);
+  else FW.pois.delete(val);
+
+  fwRecalcDirtyStep3(); // <-- IMPORTANT
+});
+});
+
+// Show "Use my location" only if we do NOT already have a user location
+function fwSyncStep1LocationUI(){
+  const hasLoc = !!(FW.userLoc || USER_LOC);
+  const locBtn = document.getElementById("fwUseLocBtn");
+  const distWrap = document.getElementById("fwDistanceWrap");
+
+  // If NOT sharing location: show "Use my location", hide distance UI
+  if (locBtn) locBtn.style.display = hasLoc ? "none" : "inline-flex";
+  if (distWrap) distWrap.style.display = hasLoc ? "block" : "none";
+}
+
+// Always reset steps properly (fixes review step “sticking”)
+document.getElementById("fwStep4").style.display = "none";
+
+// Sync Step 1 UI
+fwSyncStep1LocationUI();
+  // init step1 distance slider
+  const s = document.getElementById("fwDistSlider");
+  const v = document.getElementById("fwDistVal");
+  // init step2 sliders (length + incline)
+const lenSlider = document.getElementById("fwLenSlider");
+const incSlider = document.getElementById("fwIncSlider");
+
+const lenMinEl = document.getElementById("fwLenMin");
+const lenMaxEl = document.getElementById("fwLenMax");
+const incMinEl = document.getElementById("fwIncMin");
+const incMaxEl = document.getElementById("fwIncMax");
+
+if (lenSlider && !lenSlider.noUiSlider) {
+  noUiSlider.create(lenSlider, {
+    start:[FW.lenMin, FW.lenMax],
+    connect:true,
+    range:{min:0, max:200},
+    step:1
+  });
+  lenSlider.noUiSlider.on("update", () => {
+    const [a,b] = lenSlider.noUiSlider.get().map(v => Math.round(Number(v)));
+    lenMinEl.value = a; lenMaxEl.value = b;
+    FW.lenMin = a; FW.lenMax = b;
+    fwUpdateStep2MutualExclusion();
+    fwRecalcDirtyStep2();
+  });
+}
+
+if (incSlider && !incSlider.noUiSlider) {
+  noUiSlider.create(incSlider, {
+    start:[FW.incMin, FW.incMax],
+    connect:true,
+    range:{min:0, max:5000},
+    step:50
+  });
+  incSlider.noUiSlider.on("update", () => {
+    const [a,b] = incSlider.noUiSlider.get().map(v => Math.round(Number(v)));
+    incMinEl.value = a; incMaxEl.value = b;
+    FW.incMin = a; FW.incMax = b;
+    fwUpdateStep2MutualExclusion();
+    fwRecalcDirtyStep2();
+  });
+}
+ // keep FW defaults aligned to the main distance slider (0–500km)
+FW.maxTravelKM = FW.maxTravelKM ?? 500;
+
+if (!s.noUiSlider) {
+  noUiSlider.create(s, {
+    start:[FW.maxTravelKM],
+    connect:[true,false],
+    range:{min:0,max:500},
+    step:1
+  });
+
+  s.noUiSlider.on("update", () => {
+    const km = Math.round(Number(s.noUiSlider.get()));
+    v.value = km;
+    FW.maxTravelKM = km;
+    fwRecalcDirtyStep1();
+  });
+
+  v.addEventListener("change", () => {
+    let km = Number(v.value);
+    if (Number.isNaN(km)) km = 500;
+    km = Math.max(0, Math.min(500, km));
+    s.noUiSlider.set([km]);
+  });
+} else {
+  s.noUiSlider.set([FW.maxTravelKM]);
+}
+
+  // step2 inputs update difficulty auto
+  ["fwLenMax","fwIncMax"].forEach(id => {
+    const el = document.getElementById(id);
+  });
+  fwBindDifficultySelect();
+  document.getElementById("fwDiffSelect")?.addEventListener("change", () => {
+  FW.difficulty = document.getElementById("fwDiffSelect")?.value || "all";
+  fwUpdateStep2MutualExclusion();
+});
+  fwUpdateNextButtons();
+  // ---- FORCE UI back to defaults every time modal opens ----
+try{
+  // Step1 distance
+  const s1 = document.getElementById("fwDistSlider")?.noUiSlider;
+  if (s1) s1.set([FW_DEFAULTS.maxTravelKM]);
+  const v1 = document.getElementById("fwDistVal");
+  if (v1) v1.value = String(FW_DEFAULTS.maxTravelKM);
+
+  // Step2 sliders
+  const lenS = document.getElementById("fwLenSlider")?.noUiSlider;
+  if (lenS) lenS.set([FW_DEFAULTS.lenMin, FW_DEFAULTS.lenMax]);
+  const incS = document.getElementById("fwIncSlider")?.noUiSlider;
+  if (incS) incS.set([FW_DEFAULTS.incMin, FW_DEFAULTS.incMax]);
+
+  // Step2 inputs
+  const lenMin = document.getElementById("fwLenMin");
+  const lenMax = document.getElementById("fwLenMax");
+  const incMin = document.getElementById("fwIncMin");
+  const incMax = document.getElementById("fwIncMax");
+  if (lenMin) lenMin.value = String(FW_DEFAULTS.lenMin);
+  if (lenMax) lenMax.value = String(FW_DEFAULTS.lenMax);
+  if (incMin) incMin.value = String(FW_DEFAULTS.incMin);
+  if (incMax) incMax.value = String(FW_DEFAULTS.incMax);
+
+  // Difficulty dropdown
+  const sel = document.getElementById("fwDiffSelect");
+  if (sel) sel.value = String(FW_DEFAULTS.difficulty);
+
+} catch(e){}
+
+// Make Next buttons correct after reset
+fwRecalcDirtyStep1();
+fwRecalcDirtyStep2();
+fwRecalcDirtyStep3();
+}
+
+function closeFindWalk(){
+  document.getElementById("findWalkModal").style.display = "none";
+}
+async function fwAskLocation(){
+  if (!navigator.geolocation) return;
+  const ok = await ensureGeoPermissionOrExplain();
+  if (!ok) return;
+
+  navigator.geolocation.getCurrentPosition(
+     (pos) => {
+      FW.userLoc = { lng: pos.coords.longitude, lat: pos.coords.latitude };
+      fwRecalcDirtyStep1();
+      // Only update the questionnaire UI for now
+      fwSyncStep1LocationUI();
+      fwUpdateNextButtons();
+    },
+    (err) => console.log("FW location denied/unavailable:", err?.message),
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+}
+// === Find Walk: Next button gating ===
+const FW_DIRTY = { step1:false, step2:false, step3:false };
+
+function fwSetDirty(step){
+  FW_DIRTY[step] = true;
+  fwUpdateNextButtons();
+}
+
+function fwUpdateNextButtons(){
+  const s1Next = document.getElementById("fwStep1Next");
+  const s2Next = document.getElementById("fwStep2Next");
+  const s3Next = document.getElementById("fwStep3Next");
+
+  if (s1Next) s1Next.style.display = FW_DIRTY.step1 ? "inline-flex" : "none";
+  if (s2Next) s2Next.style.display = FW_DIRTY.step2 ? "inline-flex" : "none";
+  if (s3Next) s3Next.style.display = FW_DIRTY.step3 ? "inline-flex" : "none";
+}
+// === [FW-DIRTY-RECALC-01] ===
+function fwRecalcDirtyStep1(){
+  // Step 1: counties and/or distance-from (only if location is active)
+  const anyCounty = (FW.counties && FW.counties.size > 0);
+
+  // distance-from only counts if we have user location (FW.userLoc or USER_LOC)
+  const hasLoc = !!(FW.userLoc || USER_LOC);
+  const distChanged = hasLoc && Number(FW.maxTravelKM) !== Number(FW_DEFAULTS.maxTravelKM);
+
+  FW_DIRTY.step1 = !!(anyCounty || distChanged);
+  fwUpdateNextButtons();
+}
+function fwRecalcDirtyStep2(){
+  const manualActive = fwStep2ManualChanged();
+  const diffActive = fwStep2DifficultyChanged();
+
+  // Step2 is “dirty” if either manual range changed OR difficulty changed
+  FW_DIRTY.step2 = !!(manualActive || diffActive);
+
+  // keep mutual-exclusion UI correct too
+  fwUpdateStep2MutualExclusion();
+
+  fwUpdateNextButtons();
+}
+
+
+function fwSetStep2Disabled(ids, disabled){
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = disabled;
+    el.style.opacity = disabled ? "0.5" : "";
+    el.style.pointerEvents = disabled ? "none" : "";
+  });
+}
+
+function fwStep2ManualChanged(){
+  return (
+    Number(FW.lenMin) !== Number(FW_DEFAULTS.lenMin) ||
+    Number(FW.lenMax) !== Number(FW_DEFAULTS.lenMax) ||
+    Number(FW.incMin) !== Number(FW_DEFAULTS.incMin) ||
+    Number(FW.incMax) !== Number(FW_DEFAULTS.incMax)
+  );
+}
+
+function fwStep2DifficultyChanged(){
+  const sel = document.getElementById("fwDiffSelect");
+  const val = sel ? String(sel.value) : "all";
+  return val !== String(FW_DEFAULTS.difficulty);
+}
+
+function fwUpdateStep2MutualExclusion(){
+  const manualActive = fwStep2ManualChanged();
+  const diffActive = fwStep2DifficultyChanged();
+    // Box overlay styling
+  const manualBox = document.getElementById("fwManualBox");
+  const diffBox   = document.getElementById("fwDifficultyBox");
+
+  if (diffBox) diffBox.classList.toggle("isDisabled", manualActive);
+  if (manualBox) manualBox.classList.toggle("isDisabled", diffActive);
+
+  // If user changed Length/Incline -> grey out Difficulty
+  fwSetStep2Disabled(["fwDiffSelect"], manualActive);
+
+  // If user selected Difficulty -> grey out Length/Incline controls
+  fwSetStep2Disabled(
+    ["fwLenMin","fwLenMax","fwIncMin","fwIncMax","fwLenSlider","fwIncSlider"],
+    diffActive
+  );
+
+  // Next button visibility: show if ANY change (manual or difficulty)
+  const nextBtn = document.getElementById("fwStep2Next");
+  if (nextBtn) nextBtn.style.display = (manualActive || diffActive) ? "inline-flex" : "none";
+}
+
+// Clear helpers (you’ll wire these to the “Clear” buttons you add in HTML)
+function fwClearStep2Manual(){
+  FW.lenMin = FW_DEFAULTS.lenMin;
+  FW.lenMax = FW_DEFAULTS.lenMax;
+  FW.incMin = FW_DEFAULTS.incMin;
+  FW.incMax = FW_DEFAULTS.incMax;
+
+  // inputs
+  document.getElementById("fwLenMin").value = String(FW.lenMin);
+  document.getElementById("fwLenMax").value = String(FW.lenMax);
+  document.getElementById("fwIncMin").value = String(FW.incMin);
+  document.getElementById("fwIncMax").value = String(FW.incMax);
+
+  // sliders
+  try{
+    document.getElementById("fwLenSlider")?.noUiSlider?.set([FW.lenMin, FW.lenMax]);
+    document.getElementById("fwIncSlider")?.noUiSlider?.set([FW.incMin, FW.incMax]);
+  }catch(e){}
+
+  fwUpdateStep2MutualExclusion();
+}
+
+function fwClearStep2Difficulty(){
+  FW.difficulty = FW_DEFAULTS.difficulty;
+  const sel = document.getElementById("fwDiffSelect");
+  if (sel) sel.value = String(FW_DEFAULTS.difficulty);
+  fwUpdateStep2MutualExclusion();
+}
+
+function fwRecalcDirtyStep3(){
+  const anyPoi = (FW.pois && FW.pois.size > 0);
+  FW_DIRTY.step3 = !!anyPoi;
+  fwUpdateNextButtons();
+}
+function fwSkipStep1(){
+  // Skip step1 should ignore step1 edits and move forward (not close)
+  FW.counties = new Set();
+  FW.maxTravelKM = FW_DEFAULTS.maxTravelKM;
+  FW_DIRTY.step1 = false;
+  fwUpdateNextButtons();
+  fwGoStep2();
+}
+
+function fwGoStep2(){
+  document.getElementById("fwStep1").style.display = "none";
+  document.getElementById("fwStep2").style.display = "block";
+  document.getElementById("fwStep3").style.display = "none";
+}
+
+function fwGoStep3(skip = false){
+
+  if (skip){
+    // Skip means: do NOT save Step 2 filters
+    FW.lenMin = FW_DEFAULTS.lenMin;
+    FW.lenMax = FW_DEFAULTS.lenMax;
+    FW.incMin = FW_DEFAULTS.incMin;
+    FW.incMax = FW_DEFAULTS.incMax;
+    FW.difficulty = FW_DEFAULTS.difficulty;
+
+    // reset UI controls
+    try{
+      document.getElementById("fwLenMin").value = FW.lenMin;
+      document.getElementById("fwLenMax").value = FW.lenMax;
+      document.getElementById("fwIncMin").value = FW.incMin;
+      document.getElementById("fwIncMax").value = FW.incMax;
+      document.getElementById("fwDiffSelect").value = "all";
+    }catch(e){}
+  } else {
+    // capture step2 values
+    FW.lenMin = Number(document.getElementById("fwLenMin").value) || 0;
+    FW.lenMax = Number(document.getElementById("fwLenMax").value) || 200;
+    FW.incMin = Number(document.getElementById("fwIncMin").value) || 0;
+    FW.incMax = Number(document.getElementById("fwIncMax").value) || 5000;
+    fwRecalcDirtyStep2();
+  }
+
+  document.getElementById("fwStep1").style.display = "none";
+  document.getElementById("fwStep2").style.display = "none";
+  document.getElementById("fwStep3").style.display = "block";
+}
+
+
+function fwApplyAndClose(skipPois){
+  // apply questionnaire → MAIN FILTERS
+
+  // location + distance
+  if (FW.userLoc) {
+    USER_LOC = { ...FW.userLoc };
+    DIST_MAX_KM = FW.maxTravelKM;
+    showDistanceUI();
+    initDistanceSlider();
+    showUserMarker();
+
+    // keep the main distance slider in sync visually
+    const ds = document.getElementById("distanceSlider");
+    if (ds?.noUiSlider) ds.noUiSlider.set([DIST_MAX_KM]);
+    const di = document.getElementById("distanceMaxInput");
+    if (di) di.value = DIST_MAX_KM;
+  }
+
+  // counties
+  document.querySelectorAll("#countyDropdown input[type='checkbox']").forEach(cb => {
+    cb.checked = FW.counties.has(cb.value);
+  });
+
+  // sliders (length/incline)
+  inclineSlider.noUiSlider.set([FW.incMin, FW.incMax]);
+  lengthSlider.noUiSlider.set([FW.lenMin, FW.lenMax]);
+
+  // difficulty (set the radio that matches FW.difficulty)
+  const mapDiff = {
+    "EASY":"EASY",
+    "MODERATE":"MODERATE",
+    "HARD":"HARD",
+    "VERY HARD":"VERY HARD"
+  };
+  const target = mapDiff[FW.difficulty] || "all";
+  const radio = document.querySelector(`input[name="difficultyRadio"][value="${target}"]`);
+  if (radio) radio.checked = true;
+  const btn = document.getElementById("difficultyBtn");
+  if (btn) btn.textContent = target === "all" ? "Difficulty" : `Difficulty (${target})`;
+
+  // POIs
+  if (!skipPois) {
+    document.querySelectorAll("#poiDropdown input[type='checkbox']").forEach(cb => {
+      cb.checked = FW.pois.has(cb.value);
+    });
+    updateDropdownButtonLabels();
+  }
+
+  closeFindWalk();
+  applyAllFilters();
+  updateWalkTable();
+  zoomToSelectedCounties();
+}
+function fwBackToStep3(){
+  document.getElementById("fwStep1").style.display = "none";
+  document.getElementById("fwStep2").style.display = "none";
+  document.getElementById("fwStep3").style.display = "block";
+  document.getElementById("fwStep4").style.display = "none";
+}
+function fwBackToStep1(){
+  document.getElementById("fwStep1").style.display = "block";
+  document.getElementById("fwStep2").style.display = "none";
+  document.getElementById("fwStep3").style.display = "none";
+  document.getElementById("fwStep4").style.display = "none";
+  fwSyncStep1UI();
+  fwUpdateNextButtons();
+}
+
+function fwBackToStep2(){
+  document.getElementById("fwStep1").style.display = "none";
+  document.getElementById("fwStep2").style.display = "block";
+  document.getElementById("fwStep3").style.display = "none";
+  document.getElementById("fwStep4").style.display = "none";
+}
+
+function fwGoReview(skipPois){
+    if (skipPois){
+  // Skip means: do NOT save Step 3 filters
+  FW.pois = new Set();
+  // also reset UI checks
+  document.querySelectorAll("#fwPoiGrid input[type='checkbox']").forEach(cb => cb.checked = false);
+}
+  // capture difficulty selection
+  FW.difficulty = document.getElementById("fwDiffSelect")?.value || "all";
+
+  // if skipping POIs, clear them so review doesn't show them
+  if (skipPois) FW.pois = new Set();
+
+  // build review list: ONLY show things changed from defaults
+  const defaults = {
+    maxTravelKM: 500,
+    countiesEmpty: true,
+    lenMin: 0, lenMax: 200,
+    incMin: 0, incMax: 5000,
+    difficulty: "all",
+    poisEmpty: true
+  };
+
+  const lines = [];
+
+ if (FW.userLoc) lines.push("• Location: **using your location**");
+
+// Only show distance if the user actually changed it (#9)
+if (FW.userLoc && FW.maxTravelKM !== defaults.maxTravelKM) {
+  lines.push(`• Max travel: **${FW.maxTravelKM} km**`);
+}
+  
+// ---- REVIEW: build removable "chips" with correct wording ----
+const chips = []; // { key, text }
+
+function addChip(key, text){
+  chips.push({ key, text });
+}
+
+// Counties phrasing (singular vs plural)
+if (FW.counties.size > 0){
+  const arr = [...FW.counties];
+  if (arr.length === 1) {
+    addChip("counties", `The county that your walk must be in is <b>${arr[0]}</b>`);
+  } else {
+    addChip("counties", `The counties that your walk must be in are <b>${arr.join(", ")}</b>`);
+  }
+}
+
+// Length chip
+if (FW.lenMin !== defaults.lenMin || FW.lenMax !== defaults.lenMax) {
+  addChip("length", `Length: <b>${FW.lenMin}–${FW.lenMax} km</b>`);
+}
+
+// Incline chip
+if (FW.incMin !== defaults.incMin || FW.incMax !== defaults.incMax) {
+  addChip("incline", `Incline: <b>${FW.incMin}–${FW.incMax} m</b>`);
+}
+
+// Difficulty chip
+if (FW.difficulty !== defaults.difficulty) {
+  addChip("difficulty", `Difficulty: <b>${FW.difficulty === "all" ? "Any" : FW.difficulty}</b>`);
+}
+
+// POIs phrasing rules
+if (FW.pois.size > 0) {
+  const arr = [...FW.pois];
+
+  arr.forEach(poi => {
+    if (poi === "__IS_LOOP__") {
+      addChip(`poi:${poi}`, `Your walk must be a <b>loop walk</b>`);
+    } else if (poi === "__PARKS__") {
+      addChip(`poi:${poi}`, `Your walk must be <b>in a park</b>`);
+    } else if (poi === "__GREENWAY__") {
+      addChip(`poi:${poi}`, `Your walk must be <b>on a Greenway</b>`);
+    } else if (poi === "__HAS_YT__") {
+      addChip(`poi:${poi}`, `Your walk must be a walk recored by <b>Síulóid</b>`);
+    } else {
+      addChip(`poi:${poi}`, `Your walk must Include a <b>${poi}</b>`);
+    }
+  });
+}
+ 
+
+
+
+  if (FW.difficulty !== defaults.difficulty) {
+    lines.push(`• Difficulty: **${FW.difficulty === "all" ? "Any" : FW.difficulty}**`);
+  }
+
+
+
+const box = document.getElementById("fwReviewBox");
+if (!box) return;
+
+if (!chips.length) {
+  box.innerHTML = `<div style="font-weight:800;">No preferences selected (you kept everything at default).</div>`;
+} else {
+  box.innerHTML = `
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      ${chips.map(c => `
+        <div data-chip="${c.key}" style="
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          padding:8px 10px;
+          border:1px solid rgba(0,0,0,0.12);
+          border-radius:999px;
+          background:#fff;
+          font-family:Manrope,system-ui;
+          font-size:13px;
+        ">
+          <span>${c.text}</span>
+          <button type="button" data-remove="${c.key}" style="
+            all:unset;
+            cursor:pointer;
+            font-weight:900;
+            padding:0 6px;
+            line-height:1;
+          ">×</button>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  // X removal handlers
+  box.querySelectorAll("button[data-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.getAttribute("data-remove");
+
+      if (key === "counties") {
+        FW.counties = new Set();
+        document.querySelectorAll("#fwCountyGrid input[type='checkbox']").forEach(cb => cb.checked = false);
+      }
+      if (key === "length") {
+        FW.lenMin = defaults.lenMin; FW.lenMax = defaults.lenMax;
+        document.getElementById("fwLenMin").value = String(FW.lenMin);
+        document.getElementById("fwLenMax").value = String(FW.lenMax);
+        document.getElementById("fwLenSlider")?.noUiSlider?.set([FW.lenMin, FW.lenMax]);
+      }
+      if (key === "incline") {
+        FW.incMin = defaults.incMin; FW.incMax = defaults.incMax;
+        document.getElementById("fwIncMin").value = String(FW.incMin);
+        document.getElementById("fwIncMax").value = String(FW.incMax);
+        document.getElementById("fwIncSlider")?.noUiSlider?.set([FW.incMin, FW.incMax]);
+      }
+      if (key === "difficulty") {
+        FW.difficulty = defaults.difficulty;
+        const sel = document.getElementById("fwDiffSelect");
+        if (sel) sel.value = defaults.difficulty;
+      }
+      if (key && key.startsWith("poi:")) {
+        const poiVal = key.slice(4);
+        FW.pois.delete(poiVal);
+        const id = "fwPoi_" + poiVal.replace(/\W+/g,"_");
+        const cb = document.getElementById(id);
+        if (cb) cb.checked = false;
+      }
+
+      // re-render review after changes
+      fwGoReview(false);
+    });
+  });
+}
+
+  // show step 4
+  document.getElementById("fwStep1").style.display = "none";
+  document.getElementById("fwStep2").style.display = "none";
+  document.getElementById("fwStep3").style.display = "none";
+  document.getElementById("fwStep4").style.display = "block";
+}
+function fwUpdateDifficultyDropdown(){
+  const sel = document.getElementById("fwDiffSelect");
+  if (!sel) return;
+
+  // compute auto difficulty from current max len/inc
+  const maxLen = Number(document.getElementById("fwLenMax")?.value) || 200;
+  const maxInc = Number(document.getElementById("fwIncMax")?.value) || 5000;
+
+  const score = Math.round(((maxLen + (maxInc / 100)) / 1.5) * 10) / 10;
+
+  let auto = "VERY HARD";
+  if (score < 3) auto = "EASY";
+  else if (score < 6) auto = "MODERATE";
+  else if (score < 9) auto = "HARD";
+
+  // Disable options HARDER than auto (since your max settings imply “don’t exceed this difficulty”)
+  const order = ["EASY","MODERATE","HARD","VERY HARD"];
+  const maxIdx = order.indexOf(auto);
+
+  [...sel.options].forEach(opt => {
+    if (opt.value === "all") { opt.disabled = false; return; }
+    const idx = order.indexOf(opt.value);
+    opt.disabled = (idx > maxIdx);
+  });
+
+  // If current selection is disabled, snap to auto
+  if (sel.value !== "all") {
+    const selectedOpt = [...sel.options].find(o => o.value === sel.value);
+    if (selectedOpt?.disabled) sel.value = auto;
+  }
+}
+
+function fwBindDifficultySelect(){
+  const sel = document.getElementById("fwDiffSelect");
+  if (!sel) return;
+  sel.addEventListener("change", () => {
+    FW.difficulty = sel.value; // "all" or a real difficulty
+    fwRecalcDirtyStep2();
+  });
+}
 </script>
+<!-- =========================
+     FIND YOUR WALK MODAL
+     ========================= -->
+<div id="findWalkModal"  class="fwModal" style="display:none; position:fixed; inset:0; z-index:9999999; background:rgba(0,0,0,0.45);">
+  <div style="position:absolute; inset:4vh 4vw; background:#fff; border-radius:18px; overflow:auto; padding:16px; max-width:900px; margin:0 auto;">
+    <div style="
+  background: var(--brandGradient);
+  padding: 12px 14px;
+  border-radius: 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <img src="icons/logo.png" alt="Logo" style="height:34px; width:auto; display:block;">
+    <div style="font-weight:900; color:#fff; font-size:16px;">Find your walk</div>
+  </div>
 
+  <button type="button" class="actionBtn secondary" style="min-width:auto;" onclick="closeFindWalk()">✕ Close</button>
+</div>
+
+    <!-- STEP 1 -->
+    <div id="fwStep1" style="margin-top:14px;">
+      <h3 style="margin:10px 0;">Step 1: Location & travel distance</h3>
+
+     <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+  <div class="fwSubLabel" style="flex:1;">Allow access to your location to view walks closest to you (optional)</div>
+  <button id="fwUseLocBtn" type="button" class="actionBtn primary" onclick="fwAskLocation()" style="margin-left:auto;">Use my location</button>
+
+  <div id="fwDistanceWrap" style="flex:1 0 100%; min-width:260px;">
+    <div style="font-weight:800; margin-bottom:6px;">How far will you travel? (km)</div>
+    <input id="fwDistVal" class="miniInput" value="500" inputmode="numeric">
+    <div id="fwDistSlider" style="margin-top:10px;max-width:360px;"></div>
+  </div>
+</div>
+
+      <div style="margin-top:14px;">
+        <div style="font-weight:800; margin-bottom:8px;">Pick counties (optional)</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px;" id="fwCountyGrid"></div>
+      </div>
+
+      
+   
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+  <button type="button" class="actionBtn secondary" onclick="fwSkipStep1()">Skip</button>
+  <button id="fwStep1Next" type="button" class="actionBtn primary" onclick="fwGoStep2()" style="display:none;">Next</button>
+ </div>
+
+  </div>
+    <!-- STEP 2 -->
+    <div id="fwStep2" style="display:none; margin-top:14px;">
+  <h3 style="margin:10px 0;">Step 2: Choose Difficulty, set Length or set Incline</h3>
+
+<div style="font-size:13px; opacity:.85; margin-top:6px; margin-bottom:14px;">
+    Choose <strong>Difficulty</strong> or manually set <strong>Length</strong> and <strong>Incline</strong>. (optional)
+  </div>
+<!-- DIFFICULTY (centered) -->
+<div id="fwDifficultyBox" class="fwChoiceBox">
+  <div style="margin-top:22px; text-align:center;">
+    <div style="margin-bottom:10px; font-size:14px;">Please select your <b>difficulty</b> from the drop down</div>
+
+    <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+      <select id="fwDiffSelect" class="statusBox" style="height:34px; max-width:320px;">
+        <option value="EASY">Easy</option>
+        <option value="MODERATE">Moderate</option>
+        <option value="HARD">Hard</option>
+        <option value="VERY HARD">Very Hard</option>
+      </select>
+
+      <button type="button" class="actionBtn secondary" onclick="fwClearStep2Difficulty()" style="min-width:auto; padding:8px 12px;">Clear</button>
+    </div>
+  </div>
+</div>
+    <div id="fwManualBox" class="fwChoiceBox">
+<!-- LENGTH -->
+<div style="text-align:center; margin-top:22px;">
+  <div style="margin-bottom:10px; font-size:14px;">
+    Please enter How <b>long</b> or How <b>short</b> you would like this walk to be
+  </div>
+  <div style="margin:12px auto 0; max-width:520px;">
+    <div style=" margin-bottom:6px;font-size:11px;">Length (km)</div>
+    <div id="fwLenSlider" style="margin-top:10px;"></div>
+  </div>
+
+  <div style="display:flex; gap:14px; justify-content:space-between; align-items:flex-end; margin-top:8px;">
+    <div style="flex:1; text-align:left;">
+      
+      <input  id="fwLenMin" class="miniInput" value="0" inputmode="numeric" style="width:70px; text-align:center;">
+      <div style="margin-bottom:6px;font-size:11px;"><b>Minimum Length</b> you would like to walk (km)</div>
+    </div>
+
+    <div style="flex:1; text-align:right;">
+    
+      <input id="fwLenMax" class="miniInput" value="200" inputmode="numeric" style="width:70px; text-align:center;"">
+        <div style="margin-bottom:6px;font-size:11px;"><b>Maximum Length</b> you would like to walk (km)</div>
+    </div>
+  </div>
+
+  
+</div>
+
+<!-- INCLINE -->
+<div style="text-align:center; margin-top:22px;">
+  <div style="margin-bottom:10px; font-size:14px;">
+    Please enter How much of an <b>incline</b> or <b>lack there of</b> you would like this walk to have
+  </div>
+
+  <div style="margin:12px auto 0; max-width:520px;">
+    <div style=" margin-bottom:6px;font-size:11px;">Incline (m)</div>
+    <div id="fwIncSlider" style="margin-top:10px;"></div>
+  </div>
+
+  <div style="display:flex; gap:14px; justify-content:space-between; align-items:flex-end; margin-top:8px;">
+    <div style="flex:1; text-align:left;">
+      <input id="fwIncMin" class="miniInput" value="0" inputmode="numeric" style="width:70px; text-align:center;">
+        <div style="margin-bottom:6px;font-size:11px;"><b>Minimum of the incline</b> you would like to walk (m)</div>
+      
+    </div>
+
+    <div style="flex:1; text-align:right;">
+        <input id="fwIncMax" class="miniInput" value="5000" inputmode="numeric" style="width:70px; text-align:center;">
+      <div style="margin-bottom:6px;font-size:11px;"><b>Maximum of the incline</b> you would like to walk (m)</div>
+      
+    </div>
+  </div>
+
+  
+</div>
+<div style="display:flex; justify-content:flex-end; margin-top:14px;">
+  <button type="button" class="actionBtn secondary" onclick="fwClearStep2Manual()" style="min-width:auto; padding:8px 12px;">Clear</button>
+</div>
+</div>
+
+
+
+  <div style="font-size:12px; opacity:.75; margin-top:6px;">
+    Options grey out based on your difficulty selection or max length & max incline selection.
+  </div>
+
+
+      <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+  <button type="button" class="actionBtn secondary" onclick="fwBackToStep1()">Back</button>
+  <button id="fwStep2Skip" type="button" class="actionBtn secondary" onclick="fwGoStep3(true)">Skip</button>
+  <button id="fwStep2Next" type="button" class="actionBtn primary" onclick="fwGoStep3(false)">Next</button>
+</div>
+  </div>
+
+    <!-- STEP 3 -->
+    <div id="fwStep3" style="display:none; margin-top:14px;">
+      <h3 style="margin:10px 0;">Step 3: What would you like to see on your walk? (optional) </h3>
+      <div id="fwPoiGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px;"></div>
+
+      <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+  <button type="button" class="actionBtn secondary" onclick="fwBackToStep2()">Back</button>
+  <button id="fwStep3Skip" type="button" class="actionBtn secondary" onclick="fwGoReview(true)">Skip</button>
+  <button id="fwStep3Next" type="button" class="actionBtn primary" onclick="fwGoReview(false)">Next</button>
+</div>
+    </div>
+    <!-- STEP 4 -->
+<div id="fwStep4" style="display:none; margin-top:14px;">
+  <h3 style="margin:10px 0;">Review your choices</h3>
+
+  <div id="fwReviewBox" style="
+    border:1px solid #e6ecea;
+    border-radius:14px;
+    padding:12px;
+    background:#f7f9fb;
+    font-size:13px;
+  "></div>
+
+  <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+    <button type="button" class="actionBtn secondary" onclick="fwBackToStep3()">Back</button>
+    <button type="button" class="actionBtn primary" onclick="fwApplyAndClose(false)">View walks</button>
+  </div>
+</div>
+  </div>
+</div>
 </body>
 </html>

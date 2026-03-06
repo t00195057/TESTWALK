@@ -251,7 +251,7 @@
 {  "type": "Feature",  "properties": {    "walkid": 71,     "type":  "Car Park",     "name":   "Parking"  },  "geometry": {    "type": "Point",    "coordinates": [-8.829471, 51.927324]  }},
 {  "type": "Feature",  "properties": {    "walkid": 71,     "type":  "Heratage Site",     "name":   "Gully"  },  "geometry": {    "type": "Point",    "coordinates": [-8.832917, 51.928029]  }},
 {  "type": "Feature",  "properties": {    "walkid": 71,     "type":  "Heratage Site",     "name":   "Arch"  },  "geometry": {    "type": "Point",    "coordinates": [-8.834988, 51.929194]  }},
-{  "type": "Feature",  "properties": {    "walkid": 71,     "type":  "Water Fall",     "name":   "Waterfall Poulanassig"  },  "geometry": {    "type": "Point",    "coordinates": [-8.835718, 51.929419]  }},
+{  "type": "Feature",  "properties": {    "walkid": 71,     "type":  "Waterfall",     "name":   "Waterfall Poulanassig"  },  "geometry": {    "type": "Point",    "coordinates": [-8.835718, 51.929419]  }},
 {  "type": "Feature",  "properties": {    "walkid": 71,     "type":  "River",     "name":   "Glashagarriff River"  },  "geometry": {    "type": "Point",    "coordinates": [0, 0]  }},
 {  "type": "Feature",  "properties": {    "walkid": 58,     "type":  "Heratage Site",     "name":   "Lime Kiln"  },  "geometry": {    "type": "Point",    "coordinates": [-9.170205, 51.549935]  }},
 {  "type": "Feature",  "properties": {    "walkid": 58,     "type":  "Heratage Site",     "name":   "Field Boundary"  },  "geometry": {    "type": "Point",    "coordinates": [-9.166075, 51.549254]  }},
@@ -342,7 +342,7 @@
 {  "type": "Feature",  "properties": {    "walkid": 80,     "type":  "Heratage Site",     "name":   "Stone row"  },  "geometry": {    "type": "Point",    "coordinates": [-8.284585, 52.000233]  }},
 {  "type": "Feature",  "properties": {    "walkid": 80,     "type":  "Heratage Site",     "name":   "Standing stone"  },  "geometry": {    "type": "Point",    "coordinates": [-8.283669, 51.996472]  }},
 {  "type": "Feature",  "properties": {    "walkid": 80,     "type":  "Woods",     "name":   "Moanbaun Forest"  },  "geometry": {    "type": "Point",    "coordinates": [-8.304901, 52.001863]  }},
-{  "type": "Feature",  "properties": {    "walkid": 53,     "type":  "Water Fall",     "name":   "Waterfall"  },  "geometry": {    "type": "Point",    "coordinates": [-9.593714, 51.762423]  }},
+{  "type": "Feature",  "properties": {    "walkid": 53,     "type":  "Waterfall",     "name":   "Waterfall"  },  "geometry": {    "type": "Point",    "coordinates": [-9.593714, 51.762423]  }},
 {  "type": "Feature",  "properties": {    "walkid": 75,     "type":  "Car Park",     "name":   "Car Park"  },  "geometry": {    "type": "Point",    "coordinates": [-8.183413, 51.849896]  }},
 {  "type": "Feature",  "properties": {    "walkid": 75,     "type":  "Car Park",     "name":   "Car Park"  },  "geometry": {    "type": "Point",    "coordinates": [-8.192948, 51.848769]  }},
 {  "type": "Feature",  "properties": {    "walkid": 75,     "type":  "Heratage Site",     "name":   "Siddon's Tower"  },  "geometry": {    "type": "Point",    "coordinates": [-8.19347, 51.851436]  }},
@@ -400,4 +400,4 @@
 {  "type": "Feature",  "properties": {    "walkid": 68,     "type":  "Woods",     "name":   "Kilmurry Woods"  },  "geometry": {    "type": "Point",    "coordinates": [-8.896865, 51.843051]  }},
 {  "type": "Feature",  "properties": {    "walkid": 89,     "type":  "Mountain",     "name":   "Carron Mountain"  },  "geometry": {    "type": "Point",    "coordinates": [-8.580072, 52.31016]  }},
 {  "type": "Feature",  "properties": {    "walkid": 90,     "type":  "Mountain",     "name":   "Carron Mountain"  },  "geometry": {    "type": "Point",    "coordinates": [-8.580072, 52.31016]  }}
-    ]}
+ ]}
