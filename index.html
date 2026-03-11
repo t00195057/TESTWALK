@@ -466,7 +466,7 @@ html, body{
   }
 }
 
-        #walkTable th:hover{filter:brightness(.25);} 
+        #walkTable th:hover{filter:brightness(.65);} 
         #walkTable tbody tr:hover{background:var(--bg-light)}
         #walkTable tbody tr.rowHover{
             background: var(--bg-light);
@@ -734,7 +734,43 @@ html, body{
             padding:9px 10px !important;
             min-width:120px;
             }
+            .fwModal .fwStepNav{
+display:flex !important;
+flex-wrap:nowrap !important;
+gap:8px !important;
+justify-content:space-between !important;
+align-items:center !important;
+}
 
+.fwModal .fwStepNav .actionBtn{
+flex:1 1 0 !important;
+width:0 !important;
+min-width:0 !important;
+padding:8px 6px !important;
+font-size:11px !important;
+border-radius:10px !important;
+white-space:nowrap !important;
+}
+.fwModal h3{ font-size:13px !important; }
+.fwModal .fwSubLabel,
+.fwModal .fwChoiceBox,
+.fwModal .fwChoiceBox div,
+.fwModal .fwChoiceBox label,
+.fwModal .fwChoiceBox input,
+.fwModal .fwChoiceBox select,
+.fwModal #fwReviewBox,
+.fwModal #fwNoResultsMsg{
+  font-size:11px !important;
+}
+#fwPoiGrid{
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+#fwPoiGrid label{
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:6px !important;
+}
             #panelToggleBtn{ display:none; }
 
             /* Collapsing table gives map more room */
@@ -2007,9 +2043,18 @@ function attachPopupHoverLock(popup){
   attachPopupHoverLock(routePopup);
 });
 map.on("click", (e) => {
+  const clickedInteractive = map.queryRenderedFeatures(e.point, {
+    layers: ["walk-points", "park-points", "walk-routes"]
+  }).length > 0;
+
+  if (!clickedInteractive) {
+    clearStickyHoverAll();
+  }
+
   const box = document.getElementById("clickCoordsBox");
-  if (!box) return;
-  box.value = `${e.lngLat.lng.toFixed(6)}, ${e.lngLat.lat.toFixed(6)}`;
+  if (box) {
+    box.value = `${e.lngLat.lng.toFixed(6)}, ${e.lngLat.lat.toFixed(6)}`;
+  }
 });
         map.on("mouseleave", "walk-routes", clearRouteHover);
 
@@ -2552,6 +2597,7 @@ function uiToM(ui, val){
             counties,
             poiTypes,
             nameQuery: (document.getElementById("topSearch")?.value || "").trim().toLowerCase(),
+            maxDistanceM: (USER_LOC ? DIST_MAX_KM * 1000 : Infinity),
             maxDistanceKM: (USER_LOC ? DIST_MAX_KM * 1000 : Infinity)
             };
     }
@@ -3179,7 +3225,7 @@ function applyPOIFilterForSelectedWalk() {
         const b = getRouteBoundsForWalk(selectedWalkId);
         if (b){
             clearDynamicMapLocks();
-            map.fitBounds(b, { padding: 60, maxZoom: 13.5, duration: 800 });
+            map.fitBounds(b, { padding: 70, maxZoom: 12.5, duration: 800 });
             lockToBounds(b, 0.25);
         } else if (feature.geometry?.coordinates){
             map.flyTo({ center: feature.geometry.coordinates, zoom: 13, essential:true });
@@ -3187,7 +3233,7 @@ function applyPOIFilterForSelectedWalk() {
         }catch(e){}
 
         // show only selected point
-        setFilterSafe('walk-points', ['==', 'walkid', selectedWalkId]);
+       setFilterSafe('walk-points', ['==', ['to-number', ['get','walkid']], -1]);
 
         if (selectedParkName) {
             // keep all park routes visible
@@ -3443,7 +3489,7 @@ if (!selectedParkName) {
     function toggleDropdown(id) {
         const el = document.getElementById(id);
 
-        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(other => {
+        ['slidersDropdown','countyDropdown','poiDropdown','difficultyDropdown'].forEach(other => {
             if (other !== id) document.getElementById(other).classList.remove('open');
         });
 
@@ -3489,7 +3535,7 @@ if (!selectedParkName) {
     }
     window.addEventListener('resize', () => {
         if (window.matchMedia("(max-width: 768px)").matches) return;
-        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+        ['slidersDropdown','countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
             const el = document.getElementById(id);
             if (el.classList.contains('open')) positionDropdown(id);
         });
@@ -3499,7 +3545,7 @@ if (!selectedParkName) {
 
 if (filtersInnerEl) {
   filtersInnerEl.addEventListener('scroll', () => {
-    ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+    ['slidersDropdown','countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
       const el = document.getElementById(id);
       if (el && el.classList.contains('open')) positionDropdown(id);
     });
@@ -3510,7 +3556,7 @@ if (filtersInnerEl) {
 }
     // Close dropdown if click outside
     document.addEventListener('click', (e) => {
-        ['countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
+        ['slidersDropdown','countyDropdown','poiDropdown','difficultyDropdown'].forEach(id => {
             const el = document.getElementById(id);
             if (!el.contains(e.target)) el.classList.remove('open');
         });
@@ -3548,37 +3594,45 @@ document.addEventListener("click", (e) => {
     });
 
     function clearAllFilters() {
-        // if a walk is selected, go back first
-        if (selectedWalkId) resetSelection();
+    // if a walk is selected, go back first
+    if (selectedWalkId) resetSelection();
 
-        // reset sliders
-        inclineSlider.noUiSlider.set([0, 5000]);
-        lengthSlider.noUiSlider.set([0, 200]);
+    // reset sliders
+    inclineSlider.noUiSlider.set([0, 5000]);
+    lengthSlider.noUiSlider.set([0, 200]);
 
-        // reset dropdowns/selects
-        document.querySelector('input[name="difficultyRadio"][value="all"]').checked = true;
-        document.getElementById('difficultyBtn').textContent = "Difficulty";
+    // reset dropdowns/selects
+    document.querySelector('input[name="difficultyRadio"][value="all"]').checked = true;
+    document.getElementById('difficultyBtn').textContent = "Difficulty";
 
+    // clear top search bar
+    const topSearchEl = document.getElementById("topSearch");
+    if (topSearchEl) topSearchEl.value = "";
 
-        // uncheck counties + pois
-        document.querySelectorAll('#countyDropdown input, #poiDropdown input').forEach(cb => cb.checked = false);
+    // uncheck counties + pois
+    document.querySelectorAll('#countyDropdown input, #poiDropdown input').forEach(cb => cb.checked = false);
 
-        // clear table column searches
-        columnSearch.name = "";
-        columnSearch.length_km = "";
-        columnSearch.incline = "";
-        columnSearch.Difficulty = "";
-        document.querySelectorAll('.thSearch').forEach(inp => inp.value = "");
-        document.querySelectorAll('#walkTable thead th[data-col]').forEach(th => th.classList.remove('search-open'));
+    // hide park-name sub-filter when Parks only is cleared
+    const parkWrap = document.getElementById("parkNamesWrap");
+    if (parkWrap) parkWrap.style.display = "none";
 
-        closeAllDropdowns();
-        updateDropdownButtonLabels();
+    // clear table column searches
+    columnSearch.name = "";
+    columnSearch.length_km = "";
+    columnSearch.incline = "";
+    columnSearch.Difficulty = "";
+    document.querySelectorAll('.thSearch').forEach(inp => inp.value = "");
+    document.querySelectorAll('#walkTable thead th[data-col]').forEach(th => th.classList.remove('search-open'));
 
-        applyAllFilters();
-        const v = getIrelandView();
-        map.flyTo({ center: v.center, zoom: v.zoom });
+    closeAllDropdowns();
+    updateDropdownButtonLabels();
 
-    }
+    applyAllFilters();
+    updateWalkTable();
+
+    const v = getIrelandView();
+    map.flyTo({ center: v.center, zoom: v.zoom });
+}
 
     // === [NAME-SEARCH-LISTENER-01] ===
 // Unified search (walk / park) uses the TOP search bar
@@ -3989,7 +4043,7 @@ function setTableRowHover(walkId, on) {
 
 
     function closeAllDropdowns(){
-        ['countyDropdown','poiDropdown','difficultyDropdown']
+        ['slidersDropdown','countyDropdown','poiDropdown','difficultyDropdown']
             .forEach(id => document.getElementById(id).classList.remove('open'));
     }
     function resetMobilePanelHeight(){
@@ -4303,6 +4357,81 @@ if (!s.noUiSlider) {
 } else {
   s.noUiSlider.set([FW.maxTravelKM]);
 }
+function fwClamp(n, min, max){
+  return Math.max(min, Math.min(max, n));
+}
+
+function fwApplyLengthInputs(){
+  const minEl = document.getElementById("fwLenMin");
+  const maxEl = document.getElementById("fwLenMax");
+  const slider = document.getElementById("fwLenSlider")?.noUiSlider;
+  if (!minEl || !maxEl || !slider) return;
+
+  let min = Number(minEl.value);
+  let max = Number(maxEl.value);
+
+  if (Number.isNaN(min)) min = 0;
+  if (Number.isNaN(max)) max = 200;
+
+  min = fwClamp(min, 0, 200);
+  max = fwClamp(max, 0, 200);
+  if (min > max) [min, max] = [max, min];
+
+  slider.set([min, max]);
+}
+
+function fwApplyInclineInputs(){
+  const minEl = document.getElementById("fwIncMin");
+  const maxEl = document.getElementById("fwIncMax");
+  const slider = document.getElementById("fwIncSlider")?.noUiSlider;
+  if (!minEl || !maxEl || !slider) return;
+
+  let min = Number(minEl.value);
+  let max = Number(maxEl.value);
+
+  if (Number.isNaN(min)) min = 0;
+  if (Number.isNaN(max)) max = 5000;
+
+  min = fwClamp(min, 0, 5000);
+  max = fwClamp(max, 0, 5000);
+  if (min > max) [min, max] = [max, min];
+
+  slider.set([min, max]);
+}
+
+function fwApplyDistanceInput(){
+  const input = document.getElementById("fwDistVal");
+  const slider = document.getElementById("fwDistSlider")?.noUiSlider;
+  if (!input || !slider) return;
+
+  let km = Number(input.value);
+  if (Number.isNaN(km)) km = 500;
+  km = fwClamp(km, 0, 500);
+
+  slider.set([km]);
+}
+
+["fwLenMin","fwLenMax"].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("input", fwApplyLengthInputs);
+  el.addEventListener("change", fwApplyLengthInputs);
+  el.addEventListener("blur", fwApplyLengthInputs);
+});
+
+["fwIncMin","fwIncMax"].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("input", fwApplyInclineInputs);
+  el.addEventListener("change", fwApplyInclineInputs);
+  el.addEventListener("blur", fwApplyInclineInputs);
+});
+
+const fwDistValEl = document.getElementById("fwDistVal");
+if (fwDistValEl) {
+  fwDistValEl.addEventListener("input", fwApplyDistanceInput);
+  fwDistValEl.addEventListener("blur", fwApplyDistanceInput);
+}
 
   // step2 inputs update difficulty auto
   ["fwLenMax","fwIncMax"].forEach(id => {
@@ -4543,10 +4672,98 @@ function fwGoStep3(skip = false){
   document.getElementById("fwStep3").style.display = "block";
 }
 
+function fwCountMatches(){
+  const features = allWalkFeatures();
+  if (!features || !features.length) return 0;
 
+  const countiesLower = [...FW.counties].map(c => String(c).trim().toLowerCase());
+  const wantsYouTube = FW.pois.has("__HAS_YT__");
+  const wantsLoop = FW.pois.has("__IS_LOOP__");
+  const wantsGreenway = FW.pois.has("__GREENWAY__");
+  const wantsParksOnly = FW.pois.has("__PARKS__");
+
+  const poiOnly = [...FW.pois].filter(v => !["__HAS_YT__","__IS_LOOP__","__GREENWAY__","__PARKS__"].includes(v));
+  const poiMatchIds = getWalkIdsMatchingPOI_AND([...FW.pois]);
+
+  const effectiveLoc = FW.userLoc || USER_LOC;
+  const maxDistanceM = effectiveLoc ? Number(FW.maxTravelKM) * 1000 : Infinity;
+
+  let count = 0;
+
+  for (const f of features){
+    if (f.geometry?.type !== "Point") continue;
+
+    const p = f.properties || {};
+    const wid = Number(p.walkid);
+    const incline = Number(p.incline);
+    const length = Number(p.length_km);
+    const diff = String(p.Difficulty || "").trim().toLowerCase();
+    const countyRaw = p.county ?? p.County ?? p.COUNTY ?? "";
+    const county = String(countyRaw).trim().toLowerCase();
+    const parkName = String(getWalkParkName(p) || "").trim().toLowerCase();
+
+    if (incline < Number(FW.incMin) || incline > Number(FW.incMax)) continue;
+    if (length < Number(FW.lenMin) || length > Number(FW.lenMax)) continue;
+
+    if (FW.difficulty && FW.difficulty !== "all" && diff !== String(FW.difficulty).trim().toLowerCase()) continue;
+    if (countiesLower.length > 0 && !countiesLower.includes(county)) continue;
+
+    if (poiMatchIds instanceof Set && poiOnly.length > 0 && !poiMatchIds.has(wid)) continue;
+
+    if (wantsYouTube) {
+      const ytRaw = p["youtube link"] ?? p.youtube_link ?? p.youtube_id ?? p.youtube ?? p.YouTube ?? "";
+      const yt = String(ytRaw).trim().toLowerCase();
+      if (!yt || yt === "na") continue;
+    }
+
+    if (wantsLoop) {
+      const loopRaw = p["Is Loop"] ?? p.is_loop ?? "false";
+      if (!tf(loopRaw)) continue;
+    }
+
+    if (wantsGreenway) {
+      const greenRaw = p.Greenway ?? p.greenway ?? "false";
+      if (!tf(greenRaw)) continue;
+    }
+
+    if (wantsParksOnly && (!parkName || parkName === "na")) continue;
+
+    if (effectiveLoc && Number.isFinite(maxDistanceM)) {
+      const [lng, lat] = f.geometry.coordinates;
+      const d = haversineMeters(effectiveLoc.lng, effectiveLoc.lat, lng, lat);
+      if (d > maxDistanceM) continue;
+    }
+
+    count++;
+  }
+
+  return count;
+}
+
+function fwUpdateReviewResultState(){
+  const box = document.getElementById("fwReviewBox");
+  const msg = document.getElementById("fwNoResultsMsg");
+  const btn = document.getElementById("fwViewWalksBtn");
+  if (!box || !msg || !btn) return;
+
+  const count = fwCountMatches();
+  const noResults = count === 0;
+
+  box.style.background = noResults ? "#fdecea" : "#f7f9fb";
+  box.style.borderColor = noResults ? "#c62828" : "#e6ecea";
+  msg.style.display = noResults ? "block" : "none";
+  btn.style.display = noResults ? "none" : "inline-flex";
+}
 function fwApplyAndClose(skipPois){
   // apply questionnaire → MAIN FILTERS
-
+  if (fwCountMatches() === 0) {
+    fwUpdateReviewResultState();
+    document.getElementById("fwStep1").style.display = "none";
+    document.getElementById("fwStep2").style.display = "none";
+    document.getElementById("fwStep3").style.display = "none";
+    document.getElementById("fwStep4").style.display = "block";
+    return;
+  }
   // location + distance
   if (FW.userLoc) {
     USER_LOC = { ...FW.userLoc };
@@ -4789,6 +5006,7 @@ if (!chips.length) {
   document.getElementById("fwStep2").style.display = "none";
   document.getElementById("fwStep3").style.display = "none";
   document.getElementById("fwStep4").style.display = "block";
+  fwUpdateReviewResultState();
 }
 function fwUpdateDifficultyDropdown(){
   const sel = document.getElementById("fwDiffSelect");
@@ -4856,7 +5074,7 @@ function fwBindDifficultySelect(){
     <!-- STEP 1 -->
     <div id="fwStep1" style="margin-top:14px;">
       <h3 style="margin:10px 0;">Step 1: Location & travel distance</h3>
-
+<div class="fwChoiceBox">
      <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
   <div class="fwSubLabel" style="flex:1;">Allow access to your location to view walks closest to you (optional)</div>
   <button id="fwUseLocBtn" type="button" class="actionBtn primary" onclick="fwAskLocation()" style="margin-left:auto;">Use my location</button>
@@ -4867,15 +5085,16 @@ function fwBindDifficultySelect(){
     <div id="fwDistSlider" style="margin-top:10px;max-width:360px;"></div>
   </div>
 </div>
-
+</div>
       <div style="margin-top:14px;">
+        <div class="fwChoiceBox">
         <div style="font-weight:800; margin-bottom:8px;">Pick counties (optional)</div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px;" id="fwCountyGrid"></div>
-      </div>
+      </div></div>
 
       
    
-    <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+    <div class="fwStepNav" style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
   <button type="button" class="actionBtn secondary" onclick="fwSkipStep1()">Skip</button>
   <button id="fwStep1Next" type="button" class="actionBtn primary" onclick="fwGoStep2()" style="display:none;">Next</button>
  </div>
@@ -4925,7 +5144,7 @@ function fwBindDifficultySelect(){
 
     <div style="flex:1; text-align:right;">
     
-      <input id="fwLenMax" class="miniInput" value="200" inputmode="numeric" style="width:70px; text-align:center;"">
+      <input id="fwLenMax" class="miniInput" value="200" inputmode="numeric" style="width:70px; text-align:center;">
         <div style="margin-bottom:6px;font-size:11px;"><b>Maximum Length</b> you would like to walk (km)</div>
     </div>
   </div>
@@ -4972,7 +5191,7 @@ function fwBindDifficultySelect(){
   </div>
 
 
-      <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+      <div class="fwStepNav" style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
   <button type="button" class="actionBtn secondary" onclick="fwBackToStep1()">Back</button>
   <button id="fwStep2Skip" type="button" class="actionBtn secondary" onclick="fwGoStep3(true)">Skip</button>
   <button id="fwStep2Next" type="button" class="actionBtn primary" onclick="fwGoStep3(false)">Next</button>
@@ -4981,14 +5200,17 @@ function fwBindDifficultySelect(){
 
     <!-- STEP 3 -->
     <div id="fwStep3" style="display:none; margin-top:14px;">
+      <div class="fwChoiceBox">
       <h3 style="margin:10px 0;">Step 3: What would you like to see on your walk? (optional) </h3>
-      <div id="fwPoiGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px;"></div>
-
-      <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+      <div id="fwPoiGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px;">
+</div></div>
+      <div class="fwStepNav" style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+        
   <button type="button" class="actionBtn secondary" onclick="fwBackToStep2()">Back</button>
   <button id="fwStep3Skip" type="button" class="actionBtn secondary" onclick="fwGoReview(true)">Skip</button>
   <button id="fwStep3Next" type="button" class="actionBtn primary" onclick="fwGoReview(false)">Next</button>
 </div>
+
     </div>
     <!-- STEP 4 -->
 <div id="fwStep4" style="display:none; margin-top:14px;">
@@ -5002,10 +5224,14 @@ function fwBindDifficultySelect(){
     font-size:13px;
   "></div>
 
-  <div style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
-    <button type="button" class="actionBtn secondary" onclick="fwBackToStep3()">Back</button>
-    <button type="button" class="actionBtn primary" onclick="fwApplyAndClose(false)">View walks</button>
-  </div>
+  <div id="fwNoResultsMsg" style="display:none; margin-top:12px; font-weight:800; color:#c62828;">
+  There are no walks that match your criteria please remove one of the filters and try again
+</div>
+
+<div class="fwStepNav" style="display:flex; gap:10px; margin-top:16px; justify-content:center; flex-wrap:wrap;">
+  <button type="button" class="actionBtn secondary" onclick="fwBackToStep3()">Back</button>
+  <button id="fwViewWalksBtn" type="button" class="actionBtn primary" onclick="fwApplyAndClose(false)">View walks</button>
+</div>
 </div>
   </div>
 </div>
